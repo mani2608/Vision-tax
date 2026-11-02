@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Refund Status Tracker | Vision-Tax - Federal & 50 US States</title>
+  <meta name="description"
+    content="Track your Federal IRS tax refund status and access official Department of Revenue refund portals for all 50 US states.">
+  <link rel="icon" type="image/png" href="assets/images/favicon.png">
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <!-- Custom Modern Stylesheet -->
+  <link rel="stylesheet" href="assets/css/style.css?v=4.3">
+</head>
+
+<body>
+
+  <!-- TOP BAR (Matching Elite Tax Filling) -->
+  <div class="top-bar">
+    <div class="container top-bar-inner">
+      <span class="top-bar-notice">U.S. tax preparation and compliance support</span>
+      <div class="top-bar-contacts">
+        <a href="tel:+12137134239"><i class="fa-solid fa-phone"></i> +1 213-713-4239</a>
+
+        <a href="mailto:contact@vision-tax.com"><i class="fa-solid fa-envelope"></i> contact@vision-tax.com</a>
+        <a href="https://wa.me/919381844932" target="_blank" class="top-bar-whatsapp">
+          <i class="fa-brands fa-whatsapp"></i> WhatsApp Support
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- STICKY SITE HEADER (Matching Elite Tax Filling) -->
+  <!-- STICKY SITE HEADER (Matching Elite Tax Filling Design) -->
+  <header class="site-header">
+    <div class="container nav-container">
+      <div class="brand-wrapper">
+        <a href="index.html" class="site-logo">
+          <img src="assets/images/logo.png" alt="Vision-Tax Logo">
+          <img src="assets/images/irs.png" alt="IRS Authorized e-File Provider" class="irs-badge-nav">
+        </a>
+      </div>
+
+      <!-- Desktop Navigation -->
+      <nav class="desktop-nav">
+        <a href="index.html" class="nav-link">Home</a>
+        <a href="about.html" class="nav-link">About Us</a>
+
+        <!-- Services Mega Dropdown -->
+        <div class="nav-dropdown">
+          <a href="services.html" class="nav-link nav-dropdown-toggle">
+            Services <i class="fa-solid fa-chevron-down nav-chevron"></i>
+          </a>
+          <div class="mega-dropdown-menu">
+            <div class="mega-dropdown-grid">
+              <!-- Left Column: Individual Services -->
+              <div class="mega-col">
+                <div class="mega-col-header">
+                  <h4 class="mega-col-title">Individual Services</h4>
+                  <p class="mega-col-subtitle">Personal tax, ITIN, FBAR &amp; more</p>
+                </div>
+                <ul class="mega-menu-list">
+                  <li><a href="service-1040.html" class="mega-menu-link">1040 &amp; 1040-NR Tax Return Filing</a></li>
+                  <li><a href="service-consultations.html" class="mega-menu-link">Unlimited Tax Consultations</a></li>
+                  <li><a href="service-planning.html" class="mega-menu-link">Professional Tax Planning</a></li>
+                  <li><a href="service-itin.html" class="mega-menu-link">ITIN Guidance &amp; Support (Form W-7)</a></li>
+                  <li><a href="service-fica.html" class="mega-menu-link">FICA Taxes Refund (F-1 &amp; OPT)</a></li>
+                  <li><a href="service-fbar-fatca.html" class="mega-menu-link">FBAR &amp; FATCA Compliance</a></li>
+                  <li><a href="service-extension.html" class="mega-menu-link">Form 4868 Extension Filing</a></li>
+                  <li><a href="service-notices-audits.html" class="mega-menu-link">Tax Expert Support for Notices &amp;
+                      Audits</a></li>
+                  <li><a href="service-amendments.html" class="mega-menu-link">Filed Tax Returns Assessment &amp;
+                      Amendment</a></li>
+                  <li><a href="service-estimates.html" class="mega-menu-link">Accurate Tax Estimates &amp;
+                      Projections</a></li>
+                  <li><a href="service-w4.html" class="mega-menu-link">W-4 Withholding Assistance</a></li>
+                </ul>
+              </div>
+
+              <!-- Right Column: Business Services -->
+              <div class="mega-col">
+                <div class="mega-col-header">
+                  <h4 class="mega-col-title">Business Services</h4>
+                  <p class="mega-col-subtitle">Incorporation, bookkeeping &amp; business tax</p>
+                </div>
+                <ul class="mega-menu-list">
+                  <li><a href="service-incorporation.html" class="mega-menu-link">Business Incorporation</a></li>
+                  <li><a href="service-bookkeeping.html" class="mega-menu-link">Accounting &amp; Bookkeeping</a></li>
+                  <li><a href="service-business-tax.html" class="mega-menu-link">Tax Return Planning &amp;
+                      Preparation</a></li>
+                </ul>
+              </div>
+            </div>
+
+            <!-- Mega Dropdown Footer Bar -->
+            <div class="mega-dropdown-footer">
+              <a href="services.html">View All Tax &amp; Business Services <i class="fa-solid fa-arrow-right"
+                  style="font-size: 0.75rem;"></i></a>
+              <span><i class="fa-solid fa-phone" style="color: #deaf05;"></i> CPA Support: +1 213-713-4239</span>
+            </div>
+          </div>
+        </div>
+
+        <a href="refund-status.html" class="nav-link active">Refund Status</a>
+        <a href="contact.html" class="nav-link">Contact</a>
+        <a href="signin.html" class="nav-signin-link"><i class="fa-solid fa-lock" style="font-size: 0.78rem;"></i> Sign
+          In</a>
+        <a href="signup.html" class="btn btn-navy nav-start-filing-btn"><i class="fa-solid fa-user-plus"></i> Sign
+          Up</a>
+      </nav>
+
+      <!-- Mobile Hamburger Button -->
+      <button class="mobile-nav-toggle" aria-label="Open mobile menu">
+        <i class="fa-solid fa-bars"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- MOBILE SLIDE DRAWER -->
+  <div class="mobile-drawer-overlay"></div>
+  <aside class="mobile-drawer">
+    <div class="drawer-header">
+      <a href="index.html">
+        <img src="assets/images/logo.png" alt="Vision-Tax" style="height: 38px;">
+      </a>
+      <button class="drawer-close" aria-label="Close menu"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <ul class="drawer-links">
+      <li><a href="index.html"><i class="fa-solid fa-house"></i> Home</a></li>
+      <li><a href="about.html"><i class="fa-solid fa-user-group"></i> About Us</a></li>
+      <li><a href="services.html"><i class="fa-solid fa-briefcase"></i> Services</a></li>
+      <li><a href="refund-status.html" class="active"><i class="fa-solid fa-magnifying-glass-dollar"></i> Refund
+          Status</a></li>
+      <li><a href="contact.html"><i class="fa-solid fa-envelope"></i> Contact</a></li>
+    </ul>
+    <div
+      style="margin-top: auto; display: flex; flex-direction: column; gap: 12px; padding-top: 20px; border-top: 1px solid var(--gray-200);">
+      <a href="signup.html" class="btn btn-navy"
+        style="width: 100%; text-align: center; margin: 0; background: #0b1f38; color: #fff; font-weight: 700; padding: 12px; border-radius: 6px;">Start
+        Filing</a>
+      <a href="signin.html" class="btn btn-outline"
+        style="width: 100%; border: 1px solid var(--gray-300); color: var(--gray-800); text-align: center;">
+        <i class="fa-solid fa-lock"></i> Client Sign In
+      </a>
+      <a href="tel:+12137134239" class="btn btn-white" style="width: 100%;"><i class="fa-solid fa-phone"></i> +1 213-
+        713-4239</a>
+      <a href="https://wa.me/919381844932" target="_blank" class="btn btn-whatsapp" style="width: 100%;"><i
+          class="fa-brands fa-whatsapp"></i> Chat on WhatsApp</a>
+    </div>
+  </aside>
+
+  <!-- INNER HERO -->
+  <section class="inner-hero">
+    <div class="container">
+      <span class="hero-pill" style="margin-bottom: 14px;">Real-Time Federal & State Tracking</span>
+      <h1>Where is My Tax Refund?</h1>
+      <div class="breadcrumbs">
+        <a href="index.html">Home</a>
+        <i class="fa-solid fa-chevron-right" style="font-size: 0.7rem;"></i>
+        <span>Refund Status</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- REFUND PORTAL CONTENT -->
+  <section style="padding: 60px 0 60px;">
+    <div class="container">
+
+      <!-- FEDERAL IRS HERO BANNER -->
+      <div class="federal-irs-banner">
+        <div class="irs-banner-content">
+          <img src="assets/images/irs.png" alt="IRS Authorized e-File Provider" class="irs-badge-big">
+          <div class="irs-banner-text">
+            <h3>Check Federal IRS Refund Status</h3>
+            <p>Track your Form 1040 or 1040-NR directly on the official IRS "Where's My Refund?" portal. Updated once
+              every 24 hours (usually overnight).</p>
+          </div>
+        </div>
+        <a href="https://sa.www4.irs.gov/wmr/" target="_blank" class="btn btn-primary"
+          style="font-size: 1rem; padding: 14px 28px;">
+          <i class="fa-solid fa-arrow-up-right-from-square"></i> Open IRS Refund Portal
+        </a>
+      </div>
+
+      <!-- WHAT YOU NEED CHECKLIST -->
+      <div style="background: var(--white); margin-bottom: 50px; box-shadow: var(--shadow-sm);">
+        <h4 style="font-size: 1.15rem; font-weight: 700; color: var(--gray-900); margin-bottom: 16px;">
+          <i class="fa-solid fa-clipboard-check" style="color: var(--primary); margin-right: 8px;"></i>
+          What You Need to Check Your Refund:
+        </h4>
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
+          <div
+            style="background: var(--gray-50); border: 1px solid var(--gray-200); padding: 18px; border-radius: 12px;">
+            <div style="font-size: 0.82rem; font-weight: 700; color: var(--primary); text-transform: uppercase;">1.
+              Taxpayer ID</div>
+            <div style="font-size: 0.95rem; font-weight: 600; color: var(--gray-800); margin-top: 4px;">Social Security
+              (SSN) or ITIN</div>
+            <p style="font-size: 0.8rem; color: var(--gray-500); margin-top: 4px;">Must match the primary filer on page
+              1 of your return.</p>
+          </div>
+
+          <div
+            style="background: var(--gray-50); border: 1px solid var(--gray-200); padding: 18px; border-radius: 12px;">
+            <div style="font-size: 0.82rem; font-weight: 700; color: var(--primary); text-transform: uppercase;">2.
+              Filing Status</div>
+            <div style="font-size: 0.95rem; font-weight: 600; color: var(--gray-800); margin-top: 4px;">Single, MFJ,
+              MFS, or HOH</div>
+            <p style="font-size: 0.8rem; color: var(--gray-500); margin-top: 4px;">Select the exact status chosen on
+              your submitted form.</p>
+          </div>
+
+          <div
+            style="background: var(--gray-50); border: 1px solid var(--gray-200); padding: 18px; border-radius: 12px;">
+            <div style="font-size: 0.82rem; font-weight: 700; color: var(--primary); text-transform: uppercase;">3.
+              Exact Refund Amount</div>
+            <div style="font-size: 0.95rem; font-weight: 600; color: var(--gray-800); margin-top: 4px;">Whole Dollar
+              Value</div>
+            <p style="font-size: 0.8rem; color: var(--gray-500); margin-top: 4px;">Found on line 35a of Form 1040
+              (exclude cents).</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 50 US STATES REFUND DIRECTORY WITH LIVE SEARCH -->
+      <div style="margin-top: 60px;">
+        <div class="states-search-box">
+          <div>
+            <span class="section-tag"><i class="fa-solid fa-map-location-dot"></i> State Taxes</span>
+            <h2 style="font-size: 1.8rem; font-weight: 800; color: var(--gray-900);">Official State Tax Refund Portals
+              (All 50 States)</h2>
+            <p style="font-size: 0.94rem; color: var(--gray-500); margin-top: 4px;">Click any state below to go directly
+              to its Department of Revenue refund tracker.</p>
+          </div>
+          <div class="search-input-wrap">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="state-search-input" placeholder="Search state (e.g. California, Illinois, Texas)...">
+          </div>
+        </div>
+
+        <div id="state-no-results"
+          style="display: none; padding: 40px; text-align: center; color: var(--gray-500); font-weight: 600;">
+          No matching state found. Try searching by state name or abbreviation.
+        </div>
+
+        <div class="states-grid" id="states-grid">
+          <a href="https://revenue.alabama.gov/" target="_blank" class="state-item-card"><span>Alabama (AL)</span> <i
+              class="fa-solid fa-arrow-up-right-from-square"></i></a>
+          <a href="https://dor.alaska.gov/" target="_blank" class="state-item-card"><span>Alaska (AK)</span> <i
+              class="fa-solid fa-arrow-up-right-from-square"></i></a>
+          <a href="https://azdor.gov/" target="_blank" class="state-item-card"><span>Arizona (AZ)</span> <i
+              class="fa-solid fa-arrow-up-right-from-square"></i></a>
+          <a href="https://www.dfa.arkansas.gov/" target="_blank" class="state-item-card"><span>Arkansas (AR)</span> <i
+              class="fa-solid fa-arrow-up-right-from-square"></i></a>
+          <a href="https://www.ftb.ca.gov/" target="_blank" class="state-item-card"
+            style="border-left: 3px solid var(--primary);"><span>California (FTB - CA)</span> <i
+              class="fa-solid fa-arrow-up-right-from-square"></i></a>
+          <a href="https://tax.colorado.gov/" target="_blank" class="state-item-card"><span>Colorado (CO)</span> <i
+              class="fa-solid fa-arrow-up-right-from-square"></i></a>
+          <a href="https://portal.ct.gov/drs" target="_blank" class="state-item-card"><span>Connecticut (CT)</span> <i
+              class="fa-solid fa-arrow-up-right-from-square"></i></a>
+          <a href="https://revenue.delaware.gov/" target="_blank" class="state-item-card"><span>Delaware (DE)</span> <i
+              class="fa-solid fa-arrow-up-right-from-square"></i></a>
+          <a href="https://floridarevenue.com/" target="_blank" class="state-item-card"><span>Florida (FL)</span> <i
+              class="fa-solid fa-arrow-up-right-from-square"></i></a>
+          <a href="https://dor.georgia.gov/" target="_blank" class="state-item-card"><span>Georgia (GA)</span> <i
+              class="fa-solid fa-arrow-up-right-from-square"></i></a>
+          <a href="https://tax.hawaii.gov/" target="_blank" class="state-item-card"><span>Hawaii (HI)</span> <i
+              class="fa-solid fa-arrow-up-right-from-square"></i></a>
+          <a href="https://tax.idaho.gov/" target="_blank" class="state-item-card"><span>Idaho (ID)</span> <i
+              class="fa-solid fa-arrow-up-right-from-square"></i></a>
+          <a href="https://mytax.illinois.gov/" target="_blank" class="state-item-card"
+            style="border-left: 3px solid var(--primary);"><span>Illinois (IL - MyTax)</span> <i
+              class="fa-solid fa-arrow-up-right-from-square"></i></a>
+          <a href="https://www.in.gov/dor/" target="_blank" class="state-item-card"><span>Indiana (IN)</span> <i
+              class="fa-solid fa-arrow-up-right-from-square"></i></a>
+          <a href="https://tax.iowa.gov/" target="_blank" class="state-item-card"><span>Iowa (IA)</span> <i
+              class="fa-solid fa-arrow-up-right-from-square"></i></a>
+          <a href="https://www.ksrevenue.gov/" target="_blank" class="state-item-card"><span>Kansas (KS)</span> <i
+              class="fa-solid fa-arrow-up-right-from-square"></i></a>
+          <a href="https://revenue.ky.gov/" target="_blank" class="state-item-card"><span>Kentucky (KY)</span> <i
+              class="fa-solid fa-arrow-up-right-from-square"></i></a>
+          <a href="https://revenue.louisiana.gov/" target="_blank" class="state-item-card"><span>Louisiana (LA)</span>
+            <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+          <a href="https://www.maine.gov/revenue/" target="_blank" class="state-item-card"><span>Maine (ME)</span> <i
+              class="fa-solid fa-arrow-up-right-from-square"></i></a>
+          <a href="https://www.marylandtaxes.gov/" target="_blank" class="state-item-card"><span>Maryland (MD)</span> <i
+              class="fa-solid fa-arrow-up-right-from-square"></i></a>
+          <a href="https://www.mass.gov/orgs/massachusetts-department-of-revenue" target="_blank"
+            class="state-item-card"><span>Massachusetts (MA)</span> <i
+              class="fa-solid fa-arrow-up-right-from-square"></i></a>
+          <a href="https://www.michigan.gov/taxes" target="_blank" class="state-item-card"><span>Michigan (MI)</span> <i
+              class="fa-solid fa-arrow-up-right-from-square"></i></a>
+          <a href="https://www.revenue.state.mn.us/" target="_blank" class="state-item-card"><span>Minnesota (MN)</span>
+            <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+          <a href="https://www.dor.ms.gov/" target="_blank" class="state-item-card"><span>Mississippi (MS)</span> <i
+              class="fa-solid fa-arrow-up-right-from-square"></i></a>
+          <a href="https://dor.mo.gov/" target="_blank" class="state-item-card"><span>Missouri (MO)</span> <i
+              class="fa-solid fa-arrow-up-right-from-square"></i></a>
+          <a href="https://mtrevenue.gov/" target="_blank" class="state-item-card"><span>Montana (MT)</span> <i
+              class="fa-solid fa-arrow-up-right-from-square"></i></a>
+          <a href="https://revenue.nebraska.gov/" target="_blank" class="state-item-card"><span>Nebraska (NE)</span> <i
+              class="fa-solid fa-arrow-up-right-from-square"></i></a>
+          <a href="https://tax.nv.gov/" target="_blank" class="state-item-card"><span>Nevada (NV)</span> <i
+              class="fa-solid fa-arrow-up-right-from-square"></i></a>
+          <a href="https://www.revenue.nh.gov/" target="_blank" class="state-item-card"><span>New Hampshire (NH)</span>
+            <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+          <a href="https://www.state.nj.us/treasury/taxation/" target="_blank" class="state-item-card"
+            style="border-left: 3px solid var(--primary);"><span>New Jersey (NJ)</span> <i
+              class="fa-solid fa-arrow-up-right-from-square"></i></a>
+          <a href="https://www.tax.newmexico.gov/" target="_blank" class="state-item-card"><span>New Mexico (NM)</span>
+            <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+          <a href="https://www.tax.ny.gov/" target="_blank" class="state-item-card"
+            style="border-left: 3px solid var(--primary);"><span>New York (NY)</span> <i
+              class="fa-solid fa-arrow-up-right-from-square"></i></a>
+          <a href="https://www.ncdor.gov/" target="_blank" class="state-item-card"
+            style="border-left: 3px solid var(--primary);"><span>North Carolina (NC)</span> <i
+              class="fa-solid fa-arrow-up-right-from-square"></i></a>
+          <a href="https://www.tax.nd.gov/" target="_blank" class="state-item-card"><span>North Dakota (ND)</span> <i
+              class="fa-solid fa-arrow-up-right-from-square"></i></a>
+          <a href="https://tax.ohio.gov/" target="_blank" class="state-item-card"><span>Ohio (OH)</span> <i
+              class="fa-solid fa-arrow-up-right-from-square"></i></a>
+          <a href="https://oklahoma.gov/tax.html" target="_blank" class="state-item-card"><span>Oklahoma (OK)</span> <i
+              class="fa-solid fa-arrow-up-right-from-square"></i></a>
+          <a href="https://www.oregon.gov/dor/" target="_blank" class="state-item-card"><span>Oregon (OR)</span> <i
+              class="fa-solid fa-arrow-up-right-from-square"></i></a>
+          <a href="https://www.revenue.pa.gov/" target="_blank" class="state-item-card"><span>Pennsylvania (PA)</span>
+            <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+          <a href="https://tax.ri.gov/" target="_blank" class="state-item-card"><span>Rhode Island (RI)</span> <i
+              class="fa-solid fa-arrow-up-right-from-square"></i></a>
+          <a href="https://dor.sc.gov/" target="_blank" class="state-item-card"><span>South Carolina (SC)</span> <i
+              class="fa-solid fa-arrow-up-right-from-square"></i></a>
+          <a href="https://dor.sd.gov/" target="_blank" class="state-item-card"><span>South Dakota (SD)</span> <i
+              class="fa-solid fa-arrow-up-right-from-square"></i></a>
+          <a href="https://www.tn.gov/revenue.html" target="_blank" class="state-item-card"><span>Tennessee (TN)</span>
+            <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+          <a href="https://comptroller.texas.gov/" target="_blank" class="state-item-card"
+            style="border-left: 3px solid var(--primary);"><span>Texas (TX)</span> <i
+              class="fa-solid fa-arrow-up-right-from-square"></i></a>
+          <a href="https://tax.utah.gov/" target="_blank" class="state-item-card"><span>Utah (UT)</span> <i
+              class="fa-solid fa-arrow-up-right-from-square"></i></a>
+          <a href="https://tax.vermont.gov/" target="_blank" class="state-item-card"><span>Vermont (VT)</span> <i
+              class="fa-solid fa-arrow-up-right-from-square"></i></a>
+          <a href="https://www.tax.virginia.gov/" target="_blank" class="state-item-card"
+            style="border-left: 3px solid var(--primary);"><span>Virginia (VA)</span> <i
+              class="fa-solid fa-arrow-up-right-from-square"></i></a>
+          <a href="https://dor.wa.gov/" target="_blank" class="state-item-card"><span>Washington (WA)</span> <i
+              class="fa-solid fa-arrow-up-right-from-square"></i></a>
+          <a href="https://tax.wv.gov/" target="_blank" class="state-item-card"><span>West Virginia (WV)</span> <i
+              class="fa-solid fa-arrow-up-right-from-square"></i></a>
+          <a href="https://www.revenue.wi.gov/" target="_blank" class="state-item-card"><span>Wisconsin (WI)</span> <i
+              class="fa-solid fa-arrow-up-right-from-square"></i></a>
+          <a href="https://revenue.wyo.gov/" target="_blank" class="state-item-card"><span>Wyoming (WY)</span> <i
+              class="fa-solid fa-arrow-up-right-from-square"></i></a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- GLOBAL CTA -->
+  <section class="global-cta-section">
+    <div class="container global-cta-box">
+      <div class="cta-box-content">
+        <div class="cta-pill-badge">
+          <span class="cta-pill-dot"></span>
+          <i class="fa-solid fa-sparkles"></i>
+          <span>Free 15-Minute Consultation</span>
+        </div>
+        <h2>Haven't Filed Yet? Maximize Your 2025 Refund</h2>
+        <p>Our licensed CPAs review all eligible deductions to ensure you receive every dollar you are entitled to under
+          IRS rules.</p>
+
+        <div class="cta-trust-items">
+          <div class="cta-trust-tag"><i class="fa-solid fa-circle-check"></i> <span>Zero Obligation</span></div>
+          <div class="cta-trust-tag"><i class="fa-solid fa-circle-check"></i> <span>Licensed US CPA</span></div>
+          <div class="cta-trust-tag"><i class="fa-solid fa-circle-check"></i> <span>50-State Coverage</span></div>
+        </div>
+      </div>
+      <div>
+        <button class="btn btn-white" data-open-modal="consultation">
+          <i class="fa-solid fa-calendar-check"></i> File with Vision-Tax <i class="fa-solid fa-arrow-right"
+            style="margin-left: 4px; font-size: 0.85rem;"></i>
+        </button>
+        <a href="tel:+12137134239" class="btn btn-outline-white">
+          <i class="fa-solid fa-phone"></i> Call (213) 713-4239
+        </a>
+        <div class="cta-micro-note">
+          <i class="fa-solid fa-shield-halved"></i> 256-Bit SSL Encrypted &bull; 100% Confidential
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SITE FOOTER -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a href="index.html">
+            <img src="assets/images/logo.png" alt="Vision-Tax" style="height: 44px; filter: brightness(0) invert(1);">
+          </a>
+          <p>
+            Vision-Tax delivers exceptional, reliable tax filing and practical financial advice. Our dedicated team
+            provides personalized guidance tailored to your unique needs across the USA.
+          </p>
+
+          <p style="font-size: 11px;">Disclaimer: Vision-Tax provides professional tax advisory and electronic filing
+            assistance. We prioritize data privacy and financial security.</p>
+        </div>
+
+        <div class="footer-col">
+          <h4>Quick Links</h4>
+          <ul class="footer-links">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="about.html">About Us</a></li>
+            <li><a href="services.html">Our Services</a></li>
+            <li><a href="refund-status.html">Refund Status Tracker</a></li>
+            <li><a href="contact.html">Contact Support</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h4>Tax Services</h4>
+          <ul class="footer-links">
+            <li><a href="service-1040.html">1040 & 1040-NR Returns</a></li>
+            <li><a href="service-fica.html">F-1 & OPT Tax Filing</a></li>
+            <li><a href="service-itin.html">ITIN Application (W-7)</a></li>
+            <li><a href="service-fica.html">FICA Tax Refunds</a></li>
+            <li><a href="service-fbar-fatca.html">FBAR & FATCA Compliance</a></li>
+            <li><a href="services.html">+ more services</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h4>Contact Us</h4>
+          <ul class="footer-contact-list">
+            <li class="footer-contact-item">
+              <i class="fa-solid fa-location-dot"></i>
+              <span>212 N 2ND ST STE 100, RICHMOND KY 40475</span>
+            </li>
+            <li class="footer-contact-item">
+              <i class="fa-solid fa-phone"></i>
+              <a href="tel:+12137134239">+1 213-713-4239</a>
+            </li>
+            <li class="footer-contact-item">
+              <i class="fa-solid fa-phone"></i>
+              <a href="tel:+15513194731">+1 (551) 319-4731</a>
+            </li>
+            <li class="footer-contact-item">
+              <i class="fa-solid fa-envelope"></i>
+              <a href="mailto:contact@vision-tax.com">contact@vision-tax.com</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <p>&copy; 2025 Vision-Tax. All rights reserved. IRS Authorized e-File Provider.</p>
+        <div class="footer-socials">
+          <a href="#" class="footer-social-link" aria-label="Twitter"><i class="fa-brands fa-x-twitter"></i></a>
+          <a href="#" class="footer-social-link" aria-label="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
+          <a href="#" class="footer-social-link" aria-label="LinkedIn"><i class="fa-brands fa-linkedin-in"></i></a>
+          <a href="https://wa.me/919381844932" target="_blank" class="footer-social-link" aria-label="WhatsApp"><i
+              class="fa-brands fa-whatsapp"></i></a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- FLOATING WHATSAPP BUTTON -->
+  <a href="https://wa.me/919381844932" class="floating-whatsapp" target="_blank" aria-label="Chat on WhatsApp">
+    <i class="fa-brands fa-whatsapp"></i>
+  </a>
+
+  <!-- CONSULTATION MODAL -->
+  <div class="modal-overlay" id="consultation-modal">
+    <div class="modal-card">
+      <button class="modal-close-btn"><i class="fa-solid fa-xmark"></i></button>
+      <div style="margin-bottom: 20px;">
+        <span class="section-tag"><i class="fa-solid fa-calendar-check"></i> Free Consultation</span>
+        <h3 style="font-size: 1.5rem; font-weight: 800; color: var(--gray-900); margin-top: 6px;">Get Help with Your
+          Refund</h3>
+        <p style="font-size: 0.9rem; color: var(--gray-500);">Have a question about a delayed refund or IRS notice?
+          Speak with our CPA team.</p>
+      </div>
+
+      <form id="consultation-form">
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+          <div>
+            <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px;">Full Name *</label>
+            <input type="text" class="form-control" placeholder="e.g. Rahul Sharma" required>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div>
+              <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px;">Email Address
+                *</label>
+              <input type="email" class="form-control" placeholder="rahul@example.com" required>
+            </div>
+            <div>
+              <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px;">Phone Number
+                *</label>
+              <input type="tel" class="form-control" placeholder="+1 (555) 000-0000" required>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary" style="width: 100%; padding: 13px;">Submit Request</button>
+          <div style="text-align: center; font-size: 0.88rem; color: var(--gray-600); margin-top: 2px;">
+            Already have a tax account?
+            <a href="signin.html" style="color: var(--primary-dark); font-weight: 700; text-decoration: underline;">Sign
+              In here</a>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="assets/js/main.js?v=2.0"></script>
+</body>
+
+</html>

@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign In | Vision-Tax - Client Portal & Secure Tax Filing</title>
+  <meta name="description" content="Sign in to your Vision-Tax account to view tax returns, track refund status, and upload IRS filing documents.">
+  <link rel="icon" type="image/png" href="assets/images/favicon.png">
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <!-- Custom Stylesheet -->
+  <link rel="stylesheet" href="assets/css/style.css?v=4.3">
+  <link rel="stylesheet" href="assets/css/notify.css">
+  <script src="assets/js/notify.js" defer></script>
+</head>
+<body class="auth-page-body">
+
+  <!-- Top Back Link -->
+  <div class="auth-nav-top">
+    <a href="index.html" class="auth-back-link">
+      <i class="fa-solid fa-arrow-left"></i> Back to Vision-Tax Home
+    </a>
+  </div>
+
+  <!-- Centered Split Auth Card -->
+  <div class="auth-card-container">
+    
+    <!-- Left Branded Pane -->
+    <div class="auth-left-pane">
+      <div class="auth-brand-logo">
+        <a href="index.html" style="display: inline-flex; align-items: center; gap: 12px;">
+          <img src="assets/images/logo.png" alt="Vision-Tax Logo" class="auth-logo-img">
+          <img src="assets/images/irs.png" alt="IRS Authorized e-File Provider" class="auth-irs-badge">
+        </a>
+      </div>
+
+      <div class="auth-left-content">
+        <h1>Welcome back</h1>
+        <p class="auth-left-desc">Sign in to access your dashboard, documents, and filing status.</p>
+
+        <div class="auth-feature-pills">
+          <div class="auth-feature-pill">
+            <div class="auth-pill-icon">
+              <i class="fa-regular fa-circle-check"></i>
+            </div>
+            <div class="auth-pill-text">
+              <h4>Secure access</h4>
+              <p>Encrypted sessions + safe login.</p>
+            </div>
+          </div>
+
+          <div class="auth-feature-pill">
+            <div class="auth-pill-icon">
+              <i class="fa-regular fa-circle-check"></i>
+            </div>
+            <div class="auth-pill-text">
+              <h4>Fast workflow</h4>
+              <p>Continue your filing in minutes.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="auth-left-footer">
+        Don't have an account? <a href="signup.html">Create one</a>
+      </div>
+    </div>
+
+    <!-- Right Form Pane -->
+    <div class="auth-right-pane">
+      <span class="auth-form-tag">SIGN IN</span>
+      <h2 class="auth-form-title">Sign in to Vision-Tax</h2>
+      <p class="auth-form-subtitle">Welcome back! Please sign in to continue.</p>
+
+      <form id="signin-form" class="auth-form">
+        <!-- Email field -->
+        <div class="form-group">
+          <label for="signin-email" class="form-label">Email address</label>
+          <div class="input-with-icon-wrap">
+            <i class="fa-regular fa-envelope input-leading-icon"></i>
+            <input 
+              type="email" 
+              id="signin-email" 
+              class="form-control with-icon" 
+              placeholder="you@example.com" 
+              required
+              autocomplete="email"
+            >
+          </div>
+        </div>
+
+        <!-- Password field -->
+        <div class="form-group">
+          <label for="signin-password" class="form-label">Password</label>
+          <div class="input-with-icon-wrap">
+            <i class="fa-solid fa-lock input-leading-icon" style="font-size: 0.85rem;"></i>
+            <input 
+              type="password" 
+              id="signin-password" 
+              class="form-control with-icon with-eye" 
+              placeholder="Enter your password" 
+              required
+              autocomplete="current-password"
+            >
+            <button type="button" class="eye-toggle" id="toggle-signin-password" aria-label="Toggle password visibility">
+              <i class="fa-regular fa-eye"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Remember me & Forgot Password -->
+        <div class="auth-options-row">
+          <label class="custom-checkbox-label">
+            <input type="checkbox" id="remember-me" checked>
+            <span>Remember me</span>
+          </label>
+          <a href="javascript:void(0);" id="forgot-password-link" class="auth-forgot-link">Forgot password?</a>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" class="btn btn-primary btn-auth-submit" id="signin-submit-btn">
+          Sign In
+        </button>
+
+        <!-- Switch to Sign Up -->
+        <div class="auth-switch-text">
+          Don't have an account? <a href="signup.html">Sign Up</a>
+        </div>
+
+        <!-- Disclaimer -->
+        <div class="auth-terms-disclaimer">
+          By continuing, you agree to our <a href="about.html">Terms</a> and <a href="about.html">Privacy Policy</a>.
+        </div>
+      </form>
+    </div>
+
+  </div>
+
+  <!-- Interactive JavaScript for Sign In -->
+  <script>
+    // Eye toggle for password visibility
+    const toggleBtn = document.getElementById('toggle-signin-password');
+    const pwdInput = document.getElementById('signin-password');
+
+    if (toggleBtn && pwdInput) {
+      toggleBtn.addEventListener('click', () => {
+        const isPassword = pwdInput.type === 'password';
+        pwdInput.type = isPassword ? 'text' : 'password';
+        toggleBtn.innerHTML = isPassword ? '<i class="fa-regular fa-eye-slash"></i>' : '<i class="fa-regular fa-eye"></i>';
+      });
+    }
+
+    // Forgot password handler
+    document.getElementById('forgot-password-link')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      const email = document.getElementById('signin-email').value.trim();
+      if (email) {
+        // No reset-by-email backend exists yet, so don't claim a message was sent.
+        VTNotify.toast('info', 'Password reset', 'Online reset isn\'t available yet. Please contact support and we\'ll help you regain access.', { duration: 7000 });
+      } else {
+        VTNotify.toast('warning', 'Email required', 'Enter your email address above, then click "Forgot password?".');
+        VTNotify.invalid(document.getElementById('signin-email'));
+      }
+    });
+
+    // Sign in form submission
+    document.getElementById('signin-form')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const submitBtn = document.getElementById('signin-submit-btn');
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Signing in...';
+
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: document.getElementById('signin-email').value.trim(),
+            password: document.getElementById('signin-password').value,
+            remember: document.getElementById('remember-me').checked,
+          }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || 'Unable to sign in.');
+        const u = data.user;
+        VTNotify.toast('success', 'Signed in successfully', 'Redirecting to your dashboard…', { duration: 1500 });
+        submitBtn.innerHTML = '<i class="fa-solid fa-circle-check"></i> Redirecting...';
+        setTimeout(() => {
+          window.location.href = u.mustChangePassword ? '/change-password' : (u.role === 'admin' ? '/admin' : '/dashboard');
+        }, 700);
+      } catch (err) {
+        const offline = err instanceof TypeError;
+        VTNotify.toast('error', offline ? 'Connection problem' : 'Sign in failed',
+          offline ? 'Cannot reach the server. Check your connection and try again.' : err.message);
+        if (!offline) document.getElementById('signin-password').select();
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Sign In';
+      }
+    });
+  </script>
+</body>
+</html>

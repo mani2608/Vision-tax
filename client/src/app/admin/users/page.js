@@ -1,0 +1,20 @@
+'use client';
+import DataTable, { UserCell } from '@/components/DataTable';
+import PageHeader from '@/components/PageHeader';
+import { fmtDateTime } from '@/lib/api';
+
+const COLUMNS = [
+  { label: 'Name', sort: 'name', render: (r) => <UserCell name={r.name} sub={r.email} /> },
+  { label: 'Phone', sort: 'phone', render: (r) => (/^\d+$/.test(r.phone) ? `+${r.phone}` : r.phone) },
+  { label: 'Year', sort: 'year', render: (r) => (r.year ? <span className="chip">{r.year}</span> : <span className="muted">–</span>) },
+  { label: 'Registered At', sort: 'registered', render: (r) => fmtDateTime(r.registeredAt) },
+];
+
+export default function Users() {
+  return (
+    <>
+      <PageHeader title="All Users" subtitle="Every registered client account." />
+      <DataTable endpoint="/admin/users" columns={COLUMNS} defaultSort="registered" emptyIcon="fa-users" emptyText="No registered users yet." />
+    </>
+  );
+}

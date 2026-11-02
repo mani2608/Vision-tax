@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign Up | Vision-Tax - Create Client Account</title>
+  <meta name="description" content="Create a Vision-Tax account to manage US tax returns, upload documents, and track IRS refund status.">
+  <link rel="icon" type="image/png" href="assets/images/favicon.png">
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <!-- Custom Stylesheet -->
+  <link rel="stylesheet" href="assets/css/style.css?v=4.3">
+</head>
+<body class="auth-page-body">
+
+  <!-- Top Back Link -->
+  <div class="auth-nav-top">
+    <a href="index.html" class="auth-back-link">
+      <i class="fa-solid fa-arrow-left"></i> Back to Vision-Tax Home
+    </a>
+  </div>
+
+  <!-- Centered Split Auth Card -->
+  <div class="auth-card-container auth-signup">
+    
+    <!-- Left Branded Pane -->
+    <div class="auth-left-pane">
+      <div class="auth-brand-logo">
+        <a href="index.html" style="display: inline-flex; align-items: center; gap: 12px;">
+          <img src="assets/images/logo.png" alt="Vision-Tax Logo" class="auth-logo-img">
+          <img src="assets/images/irs.png" alt="IRS Authorized e-File Provider" class="auth-irs-badge">
+        </a>
+      </div>
+
+      <div class="auth-left-content">
+        <h1>Welcome to Vision-Tax</h1>
+        <p class="auth-left-desc">Create your account to manage filings, upload documents, and track your status.</p>
+
+        <div class="auth-feature-pills">
+          <div class="auth-feature-pill">
+            <div class="auth-pill-icon">
+              <i class="fa-regular fa-circle-check"></i>
+            </div>
+            <div class="auth-pill-text">
+              <h4>Bank-grade security</h4>
+              <p>Encrypted data + access controls.</p>
+            </div>
+          </div>
+
+          <div class="auth-feature-pill">
+            <div class="auth-pill-icon">
+              <i class="fa-regular fa-circle-check"></i>
+            </div>
+            <div class="auth-pill-text">
+              <h4>Quick onboarding</h4>
+              <p>Start in minutes with a clean setup.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="auth-left-footer">
+        Need help? <a href="contact.html">Contact support</a> from the portal footer.
+      </div>
+    </div>
+
+    <!-- Right Form Pane -->
+    <div class="auth-right-pane">
+      <span class="auth-form-tag">SIGN UP</span>
+      <h2 class="auth-form-title">Create your Vision-Tax account</h2>
+      <p class="auth-form-subtitle">Enter your details to create an account.</p>
+
+      <form id="signup-form" class="auth-form">
+        <!-- Name row (First Name & Last Name) -->
+        <div class="form-row-2">
+          <div class="form-group">
+            <label for="signup-firstname" class="form-label">First Name</label>
+            <input 
+              type="text" 
+              id="signup-firstname" 
+              class="form-control" 
+              placeholder="First name" 
+              required
+              autocomplete="given-name"
+            >
+          </div>
+          <div class="form-group">
+            <label for="signup-lastname" class="form-label">Last Name</label>
+            <input 
+              type="text" 
+              id="signup-lastname" 
+              class="form-control" 
+              placeholder="Last name" 
+              required
+              autocomplete="family-name"
+            >
+          </div>
+        </div>
+
+        <!-- Email row -->
+        <div class="form-group">
+          <label for="signup-email" class="form-label">Email</label>
+          <input 
+            type="email" 
+            id="signup-email" 
+            class="form-control" 
+            placeholder="you@example.com" 
+            required
+            autocomplete="email"
+          >
+        </div>
+
+        <!-- Phone row with Country Code (Alt Contact Number removed) -->
+        <div class="form-group">
+          <label for="signup-phone" class="form-label">Phone</label>
+          <div class="phone-input-group">
+            <select id="signup-country-code" class="form-control country-code-select" aria-label="Country Code">
+              <option value="+1" selected>🇺🇸 +1 (US)</option>
+              <option value="+91">🇮🇳 +91 (IN)</option>
+              <option value="+1-ca">🇨🇦 +1 (CA)</option>
+              <option value="+44">🇬🇧 +44 (UK)</option>
+              <option value="+61">🇦🇺 +61 (AU)</option>
+              <option value="+971">🇦🇪 +971 (AE)</option>
+              <option value="+65">🇸🇬 +65 (SG)</option>
+              <option value="+49">🇩🇪 +49 (DE)</option>
+              <option value="+33">🇫🇷 +33 (FR)</option>
+              <option value="+81">🇯🇵 +81 (JP)</option>
+              <option value="+86">🇨🇳 +86 (CN)</option>
+              <option value="+52">🇲🇽 +52 (MX)</option>
+              <option value="+55">🇧🇷 +55 (BR)</option>
+              <option value="+27">🇿🇦 +27 (ZA)</option>
+              <option value="+353">🇮🇪 +353 (IE)</option>
+              <option value="+64">🇳🇿 +64 (NZ)</option>
+              <option value="+41">🇨🇭 +41 (CH)</option>
+              <option value="+31">🇳🇱 +31 (NL)</option>
+              <option value="+46">🇸🇪 +46 (SE)</option>
+              <option value="+63">🇵🇭 +63 (PH)</option>
+              <option value="+92">🇵🇰 +92 (PK)</option>
+              <option value="+880">🇧🇩 +880 (BD)</option>
+              <option value="+977">🇳🇵 +977 (NP)</option>
+              <option value="+94">🇱🇰 +94 (LK)</option>
+              <option value="+82">🇰🇷 +82 (KR)</option>
+              <option value="+60">🇲🇾 +60 (MY)</option>
+              <option value="+39">🇮🇹 +39 (IT)</option>
+              <option value="+34">🇪🇸 +34 (ES)</option>
+            </select>
+            <input 
+              type="tel" 
+              id="signup-phone" 
+              class="form-control phone-number-input" 
+              placeholder="Phone number (e.g., 911234...)" 
+              required
+              autocomplete="tel"
+            >
+          </div>
+          <small class="field-helper">Format: 123-456-7890 or (123) 456-7890</small>
+        </div>
+
+        <!-- Password & Confirm Password row -->
+        <div class="form-row-2">
+          <div class="form-group">
+            <label for="signup-password" class="form-label">Password</label>
+            <div class="input-with-eye-wrap">
+              <input 
+                type="password" 
+                id="signup-password" 
+                class="form-control with-eye" 
+                placeholder="Create password" 
+                required
+                autocomplete="new-password"
+              >
+              <button type="button" class="eye-toggle" id="toggle-signup-password" aria-label="Toggle password visibility">
+                <i class="fa-regular fa-eye"></i>
+              </button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="signup-confirm-password" class="form-label">Confirm Password</label>
+            <div class="input-with-eye-wrap">
+              <input 
+                type="password" 
+                id="signup-confirm-password" 
+                class="form-control with-eye" 
+                placeholder="Confirm password" 
+                required
+                autocomplete="new-password"
+              >
+              <button type="button" class="eye-toggle" id="toggle-signup-confirm-password" aria-label="Toggle confirm password visibility">
+                <i class="fa-regular fa-eye"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Password strength indicator helper -->
+        <div id="password-strength-indicator" class="password-strength-text">
+          Strong password: <span id="strength-status" style="color: var(--danger); font-weight: 700;">No</span> (8+ chars, upper, number, symbol)
+        </div>
+
+        <!-- Terms Agreement -->
+        <div style="margin-top: 4px;">
+          <label class="custom-checkbox-label">
+            <input type="checkbox" id="terms-agree" required>
+            <span>I agree to the <a href="about.html" style="color: var(--primary-dark); font-weight: 600;">Terms of Service</a> and <a href="about.html" style="color: var(--primary-dark); font-weight: 600;">Privacy Policy</a>.</span>
+          </label>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" class="btn btn-primary btn-auth-submit" id="signup-submit-btn">
+          Create Account
+        </button>
+
+        <!-- Switch to Sign In -->
+        <div class="auth-switch-text">
+          Already have an account? <a href="signin.html">Sign in</a>
+        </div>
+
+        <!-- Bottom Security Disclaimer -->
+        <div class="auth-terms-disclaimer">
+          We'll never share your data. You can delete your account anytime.
+        </div>
+      </form>
+    </div>
+
+  </div>
+
+  <!-- Interactive JavaScript for Sign Up -->
+  <script>
+    // Eye toggles
+    const setupEyeToggle = (btnId, inputId) => {
+      const btn = document.getElementById(btnId);
+      const input = document.getElementById(inputId);
+      if (btn && input) {
+        btn.addEventListener('click', () => {
+          const isPwd = input.type === 'password';
+          input.type = isPwd ? 'text' : 'password';
+          btn.innerHTML = isPwd ? '<i class="fa-regular fa-eye-slash"></i>' : '<i class="fa-regular fa-eye"></i>';
+        });
+      }
+    };
+
+    setupEyeToggle('toggle-signup-password', 'signup-password');
+    setupEyeToggle('toggle-signup-confirm-password', 'signup-confirm-password');
+
+    // Live password strength indicator
+    const pwdField = document.getElementById('signup-password');
+    const strengthStatus = document.getElementById('strength-status');
+
+    if (pwdField && strengthStatus) {
+      pwdField.addEventListener('input', () => {
+        const val = pwdField.value;
+        const hasMinLen = val.length >= 8;
+        const hasUpper = /[A-Z]/.test(val);
+        const hasNumber = /[0-9]/.test(val);
+        const hasSymbol = /[^A-Za-z0-9]/.test(val);
+
+        const isStrong = hasMinLen && hasUpper && hasNumber && hasSymbol;
+        if (isStrong) {
+          strengthStatus.textContent = 'Yes ✓';
+          strengthStatus.style.color = '#10b981';
+        } else {
+          strengthStatus.textContent = 'No';
+          strengthStatus.style.color = '#ef4444';
+        }
+      });
+    }
+
+    // Form submit validation & handler
+    document.getElementById('signup-form')?.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const pwd = document.getElementById('signup-password').value;
+      const confirmPwd = document.getElementById('signup-confirm-password').value;
+
+      if (pwd !== confirmPwd) {
+        alert('Passwords do not match. Please verify your passwords.');
+        document.getElementById('signup-confirm-password').focus();
+        return;
+      }
+
+      const submitBtn = document.getElementById('signup-submit-btn');
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Creating Account...';
+
+      setTimeout(() => {
+        alert('Account successfully created! Please sign in with your credentials.');
+        window.location.href = 'signin.html';
+      }, 1000);
+    });
+  </script>
+</body>
+</html>

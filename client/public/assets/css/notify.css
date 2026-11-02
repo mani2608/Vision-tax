@@ -1,0 +1,44 @@
+/* Vision-Tax notifications: toasts + dialog (used by signin.html / signup.html) */
+.vt-toasts { position: fixed; top: 20px; right: 20px; z-index: 10000; display: flex; flex-direction: column; gap: 12px; width: min(400px, calc(100vw - 32px)); pointer-events: none; }
+.vt-toast {
+  --c: #6d28d9; --c-soft: #f1ecff;
+  position: relative; overflow: hidden; display: flex; align-items: flex-start; gap: 14px; padding: 16px 44px 18px 16px;
+  background: #fff; border-radius: 14px; border: 1px solid #ece9f6; border-left: 4px solid var(--c);
+  box-shadow: 0 12px 40px rgba(30, 20, 80, .18), 0 2px 6px rgba(30, 20, 80, .06);
+  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif; color: #1b1f33; pointer-events: auto;
+  animation: vt-in .32s cubic-bezier(.2, .9, .3, 1.2);
+}
+.vt-toast.out { animation: vt-out .22s ease forwards; }
+.vt-toast .vt-ico { flex: 0 0 38px; width: 38px; height: 38px; border-radius: 11px; background: var(--c-soft); color: var(--c); display: flex; align-items: center; justify-content: center; font-size: 1.05rem; }
+.vt-toast .vt-body { min-width: 0; }
+.vt-toast .vt-title { font-weight: 700; font-size: .95rem; line-height: 1.3; }
+.vt-toast .vt-msg { margin-top: 2px; font-size: .86rem; color: #5b6277; line-height: 1.45; word-break: break-word; }
+.vt-toast .vt-x { position: absolute; top: 10px; right: 10px; width: 28px; height: 28px; border: 0; background: none; border-radius: 8px; color: #8a90a6; cursor: pointer; font-size: .9rem; }
+.vt-toast .vt-x:hover { background: #f3f2fa; color: #1b1f33; }
+.vt-toast .vt-bar { position: absolute; left: 0; bottom: 0; height: 3px; width: 100%; background: var(--c); opacity: .55; transform-origin: left; animation: vt-bar linear forwards; }
+.vt-toast:hover .vt-bar { animation-play-state: paused; }
+.vt-toast.success { --c: #16a34a; --c-soft: #dcfce7; }
+.vt-toast.error   { --c: #dc2626; --c-soft: #fee2e2; }
+.vt-toast.warning { --c: #d97706; --c-soft: #fef3c7; }
+.vt-toast.info    { --c: #2563eb; --c-soft: #dbeafe; }
+
+.vt-overlay { position: fixed; inset: 0; z-index: 10001; display: flex; align-items: center; justify-content: center; padding: 20px; background: rgba(15, 12, 40, .55); backdrop-filter: blur(4px); animation: vt-fade .2s ease; }
+.vt-dialog { width: 100%; max-width: 420px; text-align: center; background: #fff; border-radius: 22px; padding: 34px 30px 28px; box-shadow: 0 30px 80px rgba(20, 10, 70, .35); font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif; color: #1b1f33; animation: vt-pop .3s cubic-bezier(.2, .9, .3, 1.25); }
+.vt-dialog .vt-badge { width: 76px; height: 76px; margin: 0 auto 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; color: #fff; background: linear-gradient(135deg, #10b981, #059669); box-shadow: 0 0 0 8px rgba(16, 185, 129, .15); }
+.vt-dialog.error .vt-badge { background: linear-gradient(135deg, #f43f5e, #dc2626); box-shadow: 0 0 0 8px rgba(220, 38, 38, .13); }
+.vt-dialog h3 { margin: 0 0 8px; font-size: 1.35rem; font-weight: 800; letter-spacing: -.02em; }
+.vt-dialog p { margin: 0 0 22px; color: #5b6277; line-height: 1.55; font-size: .95rem; }
+.vt-dialog .vt-btn { width: 100%; border: 0; border-radius: 12px; padding: 13px; font: inherit; font-weight: 700; color: #fff; cursor: pointer; background: linear-gradient(135deg, #7c3aed, #9333ea); box-shadow: 0 8px 20px rgba(124, 58, 237, .3); }
+.vt-dialog .vt-btn:hover { filter: brightness(1.07); }
+.vt-dialog .vt-note { display: block; margin-top: 12px; font-size: .8rem; color: #8a90a6; }
+
+.vt-invalid { border-color: #dc2626 !important; box-shadow: 0 0 0 3px rgba(220, 38, 38, .15) !important; animation: vt-shake .35s; }
+
+@keyframes vt-in { from { opacity: 0; transform: translateX(24px) scale(.97); } }
+@keyframes vt-out { to { opacity: 0; transform: translateX(24px); } }
+@keyframes vt-bar { to { transform: scaleX(0); } }
+@keyframes vt-fade { from { opacity: 0; } }
+@keyframes vt-pop { from { opacity: 0; transform: translateY(14px) scale(.94); } }
+@keyframes vt-shake { 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+@media (max-width: 520px) { .vt-toasts { top: 12px; right: 16px; left: 16px; width: auto; } }
+@media (prefers-reduced-motion: reduce) { .vt-toast, .vt-dialog, .vt-overlay, .vt-invalid { animation: none !important; } .vt-bar { display: none; } }
