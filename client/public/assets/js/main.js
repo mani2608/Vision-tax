@@ -618,10 +618,12 @@ function initRazorpayCheckout(modalOverlay, closeModal) {
   form.querySelectorAll('input[name="pay_gateway"]').forEach((r) => r.addEventListener('change', applyMethod));
   applyMethod();
 
-  // Phone placeholder follows the active market (Indian numbers while testing, U.S. at launch); the server validates.
+  // Any country is accepted: searchable country selector + libphonenumber validation (identical rules on the server).
+  // The configured default country only pre-selects the dropdown; it never restricts input.
+  const phoneField = window.VTPhoneInput ? VTPhoneInput.mount($('pay-modal-phone'), { defaultCountry: 'US' }) : null;
   fetch('/api/public/config', { cache: 'no-store' })
     .then((r) => (r.ok ? r.json() : null))
-    .then((c) => { if (c && c.phonePlaceholder) $('pay-modal-phone').placeholder = c.phonePlaceholder; })
+    .then((c) => { if (c && c.defaultCountry && phoneField) phoneField.setDefaultCountry(c.defaultCountry); })
     .catch(() => {});
 
   // Plan prices come from the server (display only; the server recomputes the amount on every order).
@@ -701,7 +703,11 @@ function initRazorpayCheckout(modalOverlay, closeModal) {
     if (!payload.amount) return setError(refWrap.hidden ? 'The price for this plan could not be loaded. Please refresh the page.' : 'Enter a valid payment reference to see the amount.');
     if (payload.name.length < 2) return setError('Enter your full name.');
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(payload.email)) return setError('Enter a valid email address.');
-    if (!/^\+?[\d\s\-().]{7,20}$/.test(payload.phone)) return setError('Enter a valid phone number.');
+    if (!phoneField) return setError('The phone field is still loading. Please refresh the page and try again.');
+    const phoneCheck = phoneField.validate();
+    if (!phoneCheck.ok) return setError(phoneCheck.error);
+    payload.phone = phoneCheck.e164;
+    payload.country = phoneCheck.country || phoneField.country();
 
     const label = submitBtn.innerHTML;
     submitBtn.disabled = true;

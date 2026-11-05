@@ -1,11 +1,11 @@
 'use client';
 import DataTable, { UserCell } from '@/components/DataTable';
 import PageHeader from '@/components/PageHeader';
-import { fmtDateTime } from '@/lib/api';
+import { fmtDateTime, fmtPhone } from '@/lib/api';
 
 const COLUMNS = [
   { label: 'Name', sort: 'name', render: (r) => <UserCell name={r.name} sub={r.email} /> },
-  { label: 'Phone', sort: 'phone', render: (r) => (/^\d+$/.test(r.phone) ? `+${r.phone}` : r.phone) },
+  { label: 'Phone', sort: 'phone', render: (r) => <span className="nowrap">{fmtPhone(r.phone)}</span> },
   { label: 'Year', sort: 'year', render: (r) => (r.year ? <span className="chip">{r.year}</span> : <span className="muted">–</span>) },
   { label: 'Registered At', sort: 'registered', render: (r) => fmtDateTime(r.registeredAt) },
 ];

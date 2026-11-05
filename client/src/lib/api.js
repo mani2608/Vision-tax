@@ -6,43 +6,19 @@ export const STATUS_LABEL = { pending: 'Pending', ongoing: 'In Progress', drafte
 // Mirrors the server's TRANSITIONS table (the server is the authority; this only shapes the UI).
 export const TRANSITIONS = { pending: ['ongoing'], ongoing: ['drafted', 'completed'], drafted: ['ongoing', 'completed'], completed: [] };
 
-// Mirrors server normalizePhone(). The active market (IN while testing, US at launch) comes from the server's
-// PHONE_REGION via /api/public/config, so there is a single switch. Other +country codes are kept as E.164.
-const PHONE_REGIONS = {
-  US: { cc: '1', label: 'U.S.', example: '(212) 555-1234', valid: (n) => /^[2-9]\d{2}[2-9]\d{6}$/.test(n), hint: 'area code and exchange cannot start with 0 or 1' },
-  IN: { cc: '91', label: 'Indian mobile', example: '98765 43210', valid: (n) => /^[6-9]\d{9}$/.test(n), hint: 'it must start with 6, 7, 8 or 9' },
-};
-export function normalizePhone(raw, region = 'US') {
-  const R = PHONE_REGIONS[region] || PHONE_REGIONS.US;
-  const s = String(raw || '').trim();
-  if (!s) return { error: 'Contact number is required.' };
-  if (!/^\+?[\d\s\-().]+$/.test(s)) return { error: 'Phone number may contain only digits, spaces, dashes, dots and parentheses.' };
-  const digits = s.replace(/\D/g, '');
-  let national;
-  if (s.startsWith('+')) {
-    if (!digits.startsWith(R.cc)) {
-      return digits.length >= 8 && digits.length <= 15 ? { value: `+${digits}` } : { error: 'Enter a valid international number, e.g. +44 20 7946 0958.' };
-    }
-    national = digits.slice(R.cc.length);
-  } else {
-    national = digits;
-    if (region === 'IN') {
-      if (national.length === 12 && national.startsWith('91')) national = national.slice(2);
-      else if (national.length === 11 && national.startsWith('0')) national = national.slice(1);
-    } else if (national.length === 11 && national.startsWith('1')) national = national.slice(1);
-  }
-  if (national.length !== 10) return { error: `Enter a valid 10-digit ${R.label} number, e.g. ${R.example}.` };
-  if (!R.valid(national)) return { error: `Enter a valid ${R.label} number (${R.hint}).` };
-  return { value: `+${R.cc}${national}` };
-}
+// International phone handling (libphonenumber data) is shared with the API: see public/assets/js/phone-core.js.
+import VTPhone from '../../public/assets/js/phone-core.js';
+export { VTPhone };
+// Readable form of a stored number, e.g. "+919876543210" -> "+91 98765 43210". Unreadable values are shown unchanged.
+export const fmtPhone = (v) => VTPhone.format(v);
 
-// Active phone market + placeholder, fetched once from the server.
+// Display-only settings from the server. defaultCountry just pre-selects the phone country; every country is accepted.
 let configPromise = null;
 export function loadPublicConfig() {
   if (!configPromise) {
     configPromise = fetch('/api/public/config', { cache: 'no-store' })
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error('config'))))
-      .catch(() => { configPromise = null; return { phoneRegion: 'US', phonePlaceholder: '+1 (212) 555-1234' }; });
+      .catch(() => { configPromise = null; return { defaultCountry: 'US' }; });
   }
   return configPromise;
 }

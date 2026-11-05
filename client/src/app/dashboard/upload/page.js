@@ -2,18 +2,20 @@
 import { Suspense, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { api, FILING_TYPES, ALLOWED_EXT, MAX_FILE_MB, MAX_FILES, fmtSize, fileProblem, normalizePhone, loadPublicConfig } from '@/lib/api';
+import { api, FILING_TYPES, ALLOWED_EXT, MAX_FILE_MB, MAX_FILES, fmtSize, fileProblem, VTPhone, fmtPhone, loadPublicConfig } from '@/lib/api';
 import { useToast } from '@/components/Shell';
 import PageHeader from '@/components/PageHeader';
+import PhoneField from '@/components/PhoneField';
 
 // Same rules for submitting and editing (the server enforces them again).
-function validateDetails(v, region) {
+function validateDetails(v, country, skipPhone) {
   if (!v.name.trim() || v.name.trim().length > 150) return 'Filing name is required.';
   if (!FILING_TYPES.includes(v.type)) return 'Select a valid filing type.';
   const y = Number(v.year);
   if (!/^\d{4}$/.test(String(v.year).trim()) || y < 2000 || y > new Date().getFullYear() + 1) return 'Enter a valid filing year.';
-  const p = normalizePhone(v.contact, region);
-  return p.error || '';
+  if (skipPhone) return '';
+  const p = VTPhone.parse(v.contact, country);
+  return p.ok ? '' : p.error;
 }
 
 function UploadFiling() {
@@ -33,8 +35,13 @@ function UploadFiling() {
   const [values, setValues] = useState({ name: '', type: '', year: '', contact: '' });
   const [original, setOriginal] = useState(null);
   const [reviewing, setReviewing] = useState(false);
-  const [phone, setPhone] = useState({ phoneRegion: 'US', phonePlaceholder: '+1 (212) 555-1234' });
-  useEffect(() => { loadPublicConfig().then(setPhone); }, []);
+  // Contact number: free text + selected country. defaultCountry only pre-selects the dropdown; any country is accepted.
+  const [contact, setContact] = useState({ text: '', country: 'US' });
+  const [phoneErr, setPhoneErr] = useState(false);
+  const touched = useRef(false);
+  useEffect(() => {
+    loadPublicConfig().then((c) => { if (!touched.current && !editing) setContact((p) => ({ ...p, country: c.defaultCountry || p.country })); });
+  }, [editing]);
 
   useEffect(() => {
     if (!editing) return;
@@ -42,6 +49,9 @@ function UploadFiling() {
       .then(({ filing }) => {
         if (!filing.editable) return setBlocked('This filing is completed and can no longer be edited. You can still view it under My Filings.');
         const v = { name: filing.name, type: filing.type, year: String(filing.year), contact: filing.contact };
+        // Pre-fill the saved number as country + national digits; a value that cannot be read is shown as-is.
+        const parts = VTPhone.split(filing.contact);
+        setContact(parts ? { text: parts.national, country: parts.country || 'US' } : { text: filing.contact, country: 'US' });
         setValues(v); setOriginal(v); setLoaded(true);
       })
       .catch((e) => setBlocked(e.message));
@@ -70,19 +80,25 @@ function UploadFiling() {
     return '';
   }
 
-  const read = (form) => Object.fromEntries(['name', 'type', 'year', 'contact'].map((k) => [k, form.elements[k].value]));
+  const read = (form) => ({ ...Object.fromEntries(['name', 'type', 'year'].map((k) => [k, form.elements[k].value])), contact: contact.text });
 
   async function submit(e) {
     e.preventDefault();
     const form = e.currentTarget;
     const v = read(form);
-    const msg = validateDetails(v, phone.phoneRegion) || (editing ? '' : problem());
+    // An older saved number that cannot be read as an international number may stay as it is while other details are edited.
+    const keepSaved = editing && original && !VTPhone.split(original.contact) && v.contact === original.contact;
+    const msg = validateDetails(v, contact.country, keepSaved) || (editing ? '' : problem());
+    setPhoneErr(!keepSaved && Boolean(VTPhone.parse(v.contact, contact.country).error));
     if (msg) return setError(msg);
     setError('');
+    // Normalise to E.164 (+<country code><number>) for the review screen and the API.
+    if (!keepSaved) v.contact = VTPhone.parse(v.contact, contact.country).e164;
     if (editing) { setValues(v); setReviewing(true); return; }
     setBusy(true);
     const body = new FormData();
     for (const k of ['name', 'type', 'year', 'contact']) body.append(k, v[k]);
+    body.append('contactCountry', contact.country);
     files.forEach((f) => body.append('files', f));
     try {
       await api('/user/filings', { method: 'POST', body });
@@ -97,7 +113,7 @@ function UploadFiling() {
   async function saveChanges() {
     setBusy(true); setError('');
     try {
-      const r = await api(`/user/filings/${editId}`, { method: 'PUT', body: values });
+      const r = await api(`/user/filings/${editId}`, { method: 'PUT', body: { ...values, contactCountry: contact.country } });
       toast(r.unchanged ? 'No changes to save.' : 'Filing updated successfully.');
       router.push('/dashboard/filings');
     } catch (err) {
@@ -131,7 +147,7 @@ function UploadFiling() {
           <ul className="review">
             {rows.map(([label, k]) => (
               <li key={k} className={values[k] !== original[k] ? 'changed' : ''}>
-                <span>{label}</span><span>{k === 'contact' ? (normalizePhone(values[k], phone.phoneRegion).value || values[k]) : values[k]}</span>
+                <span>{label}</span><span>{k === 'contact' ? fmtPhone(values[k]) : values[k]}</span>
               </li>
             ))}
           </ul>
@@ -165,7 +181,8 @@ function UploadFiling() {
             </div>
             <div className="field"><label htmlFor="year">Filing Year</label><input id="year" name="year" className="input" inputMode="numeric" maxLength={4} required placeholder="2025" defaultValue={values.year} /></div>
           </div>
-          <div className="field"><label htmlFor="contact">Contact Number</label><input id="contact" name="contact" className="input" inputMode="tel" maxLength={20} required placeholder={phone.phonePlaceholder} defaultValue={values.contact} /></div>
+          <PhoneField id="contact" label="Contact Number" required value={contact} error={phoneErr}
+            onChange={(c) => { touched.current = true; setPhoneErr(false); setContact(c); }} />
           {!editing && (
             <div className="field">
               <label htmlFor="files">Documents</label>

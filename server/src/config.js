@@ -14,8 +14,9 @@ const config = {
     database: env.DB_NAME || 'vision_tax',
   },
   jwtSecret: env.JWT_SECRET || '',
-  // Which country's phone rules apply to filings and the Pay Now form: 'IN' (testing phase) or 'US' (default / launch).
-  phoneRegion: String(env.PHONE_REGION || 'US').toUpperCase() === 'IN' ? 'IN' : 'US',
+  // OPTIONAL default country (ISO code, e.g. IN or US). It only pre-selects the country dropdown and is used to read numbers
+  // typed without a country code. It never restricts which countries are accepted. Unset/invalid = no default.
+  phoneRegion: /^[A-Za-z]{2}$/.test(String(env.PHONE_REGION || '')) ? String(env.PHONE_REGION).toUpperCase() : '',
   razorpay: {
     keyId: env.RAZORPAY_KEY_ID || '',
     keySecret: env.RAZORPAY_KEY_SECRET || '',

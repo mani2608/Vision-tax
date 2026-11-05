@@ -1,12 +1,13 @@
 'use client';
 import DataTable, { FileLinks } from '@/components/DataTable';
 import PageHeader from '@/components/PageHeader';
+import { fmtPhone } from '@/lib/api';
 
 const COLUMNS = [
   { label: 'Name', sort: 'name', render: (r) => <strong>{r.name}</strong> },
   { label: 'Type', sort: 'type', render: (r) => <span className="chip">{r.type}</span> },
   { label: 'Year', sort: 'year', render: (r) => r.year },
-  { label: 'Contact', sort: 'contact', render: (r) => r.contact },
+  { label: 'Contact', sort: 'contact', render: (r) => <span className="nowrap">{fmtPhone(r.contact)}</span> },
   { label: 'Final Copy Files', render: (r) => <FileLinks files={r.files} /> },
 ];
 

@@ -6,7 +6,7 @@ import PageHeader from '@/components/PageHeader';
 import Modal from '@/components/Modal';
 import { useToast } from '@/components/Shell';
 import { ReferenceCards } from '@/components/ClientPayments';
-import { api, ALLOWED_EXT, MAX_FILE_MB, fileProblem, fmtSize } from '@/lib/api';
+import { api, ALLOWED_EXT, MAX_FILE_MB, fileProblem, fmtSize, fmtPhone } from '@/lib/api';
 
 // Pick a corrected document, show its name/size, confirm, then upload it over the existing record.
 function ReplaceDialog({ file, onClose, onDone }) {
@@ -62,7 +62,7 @@ export default function MyFilings() {
     { label: 'Name', sort: 'name', render: (r) => <strong>{r.name}</strong> },
     { label: 'Type', sort: 'type', render: (r) => <span className="chip">{r.type}</span> },
     { label: 'Year', sort: 'year', render: (r) => r.year },
-    { label: 'Contact', sort: 'contact', render: (r) => r.contact },
+    { label: 'Contact', sort: 'contact', render: (r) => <span className="nowrap">{fmtPhone(r.contact)}</span> },
     { label: 'Status', render: (r) => <StatusBadge status={r.status} /> },
     {
       label: 'Files',

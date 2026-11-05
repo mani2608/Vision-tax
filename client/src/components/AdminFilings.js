@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import DataTable, { FileLinks, UserCell } from './DataTable';
 import PageHeader from './PageHeader';
-import { api, STATUS_LABEL, fileProblem, fmtSize, ALLOWED_EXT } from '@/lib/api';
+import { api, STATUS_LABEL, fileProblem, fmtSize, ALLOWED_EXT, fmtPhone } from '@/lib/api';
 import { useToast } from './Shell';
 import Modal from './Modal';
 import { PayBadge, money } from './ClientPayments';
@@ -216,7 +216,7 @@ const BASE = [
   { label: 'Client', sort: 'name', render: (r) => <UserCell name={r.userName || r.name} sub={r.userEmail} /> },
   { label: 'Type of Filing', sort: 'type', render: (r) => <span className="chip">{r.type}</span> },
   { label: 'Year', sort: 'year', render: (r) => r.year },
-  { label: 'Contact', sort: 'contact', render: (r) => <span className="nowrap">{r.contact}</span> },
+  { label: 'Contact', sort: 'contact', render: (r) => <span className="nowrap">{fmtPhone(r.contact)}</span> },
 ];
 
 // Each row owns its upload state, so every row's Choose File and Upload buttons work independently.

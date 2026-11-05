@@ -6940,3 +6940,18 @@ select.form-control {
     font-size: 0.86rem;
   }
 }
+/* ---- International phone field (country selector + number) ---- */
+.vt-cc { position: relative; flex-shrink: 0; }
+.vt-cc-btn { display: flex; align-items: center; gap: 6px; width: auto; min-width: 112px; padding: 12px 12px; font-size: 0.9rem; font-weight: 600; color: #0f172a; background-color: #fff; cursor: pointer; border-radius: 10px; white-space: nowrap; text-align: left; }
+.vt-cc-iso { color: #64748b; font-size: 0.8rem; }
+.vt-cc-caret { font-size: 0.65rem; color: #94a3b8; margin-left: auto; }
+.vt-cc-panel { position: absolute; z-index: 60; top: calc(100% + 6px); left: 0; width: 300px; max-width: 86vw; background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; box-shadow: 0 12px 32px rgba(15, 23, 42, 0.18); padding: 8px; }
+.vt-cc-search { width: 100%; box-sizing: border-box; padding: 9px 10px; border: 1px solid #cbd5e1; border-radius: 8px; font: inherit; font-size: 0.9rem; }
+.vt-cc-list { list-style: none; margin: 6px 0 0; padding: 0; max-height: 240px; overflow-y: auto; }
+.vt-cc-item { display: flex; justify-content: space-between; gap: 10px; padding: 8px 10px; border-radius: 6px; cursor: pointer; font-size: 0.88rem; color: #0f172a; }
+.vt-cc-item:hover, .vt-cc-item.on { background: #eef2ff; }
+.vt-cc-dial { color: #64748b; font-variant-numeric: tabular-nums; }
+.vt-cc-none { padding: 10px; color: #64748b; font-size: 0.88rem; }
+.vt-phone-msg { display: block; min-height: 0; margin-top: 6px; color: #dc2626; font-size: 0.8rem; }
+.vt-phone-msg:empty { display: none; }
+.vt-phone-bad { border-color: #dc2626 !important; }

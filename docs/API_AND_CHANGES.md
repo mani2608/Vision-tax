@@ -5,7 +5,7 @@ List endpoints accept `page`, `limit` (10/25/50/100), `q` (search), `name` (name
 
 | Method & path | Access | Purpose |
 |---|---|---|
-| POST `/auth/register` | public (rate-limited) | `{firstName,lastName,email,countryCode,phone,password}` |
+| POST `/auth/register` | public (rate-limited) | `{firstName,lastName,email,phone,country,password}` (phone: any valid international number; stored as E.164; `country` = ISO code used only when the number has no +code) |
 | POST `/auth/login` | public (rate-limited) | `{email,password,remember}` → sets cookie, returns `{user}` |
 | POST `/auth/logout` | any | revokes token, clears cookie |
 | GET `/auth/me` | signed in | current user |

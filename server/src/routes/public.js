@@ -3,7 +3,7 @@ const path = require('path');
 const fs = require('fs');
 const { config } = require('../config');
 const { getSettings, paymentInfo } = require('../settings');
-const { asyncRoute, PHONE_REGIONS } = require('../lib');
+const { asyncRoute } = require('../lib');
 
 const router = express.Router();
 
@@ -19,10 +19,10 @@ router.get('/payment-info', asyncRoute(async (_req, res) => {
   }
 }));
 
-// Lets the static homepage and dashboard show/validate phone numbers for the active market (IN while testing, US later).
+// Display-only settings for the browser. defaultCountry only pre-selects the phone country dropdown; every country is accepted.
+// Payment currency is independent of phone country and stays INR.
 router.get('/config', (_req, res) => {
-  const R = PHONE_REGIONS[config.phoneRegion];
-  res.json({ phoneRegion: config.phoneRegion, phoneExample: R.example, phonePlaceholder: config.phoneRegion === 'IN' ? '+91 98765 43210' : '+1 (212) 555-1234', currency: 'INR' });
+  res.json({ defaultCountry: config.phoneRegion || 'US', currency: 'INR' });
 });
 
 router.get('/payment-qr', asyncRoute(async (_req, res) => {

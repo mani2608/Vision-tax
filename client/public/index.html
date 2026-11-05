@@ -1511,7 +1511,7 @@
             <div>
               <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px;">Phone Number
                 *</label>
-              <input type="tel" id="pay-modal-phone" class="form-control" placeholder="+1 (555) 000-0000" maxlength="20" required>
+              <input type="tel" id="pay-modal-phone" class="form-control" placeholder="Phone number" required>
             </div>
           </div>
           <div>
@@ -1565,7 +1565,10 @@
   </div>
 
   <!-- Scripts -->
-  <script src="assets/js/main.js?v=2.6"></script>
+  <script src="assets/js/vendor/libphonenumber-max.js" defer></script>
+  <script src="assets/js/phone-core.js" defer></script>
+  <script src="assets/js/phone-input.js" defer></script>
+  <script src="assets/js/main.js?v=2.7"></script>
   <script src="assets/js/notify.js"></script>
   <script src="assets/js/account-menu.js?v=1"></script>
 </body>

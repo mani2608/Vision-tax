@@ -95,8 +95,6 @@ router.get('/filings/:id', asyncRoute(async (req, res) => {
 // Edit the details of an existing filing (same validation as submission). Completed filings are read-only.
 router.put('/filings/:id', asyncRoute(async (req, res) => {
   const id = Number(req.params.id);
-  const parsed = validateFilingInput(req.body);
-  if (parsed.error) return res.status(400).json({ error: parsed.error });
   const conn = await pool.getConnection();
   try {
     await conn.beginTransaction();
@@ -108,6 +106,10 @@ router.put('/filings/:id', asyncRoute(async (req, res) => {
       await conn.rollback();
       return res.status(409).json({ error: 'This filing is completed and can no longer be edited. Please contact support for changes.' });
     }
+    // Same rules as submission. A contact number saved earlier and left untouched is kept as-is, so records
+    // created under older rules can still have their other details edited.
+    const parsed = validateFilingInput(req.body, f.contact);
+    if (parsed.error) { await conn.rollback(); return res.status(400).json({ error: parsed.error }); }
     const v = parsed.value;
     const changed = [];
     if (v.name !== f.name) changed.push('name');

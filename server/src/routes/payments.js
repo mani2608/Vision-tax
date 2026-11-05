@@ -173,7 +173,7 @@ router.post('/order', limiter(30), asyncRoute(async (req, res) => {
   if (name.length < 2 || name.length > 100) return res.status(400).json({ error: 'Enter your full name.' });
   const email = String(b.email || '').trim().toLowerCase();
   if (!validators.email(email)) return res.status(400).json({ error: 'Enter a valid email address.' });
-  const phone = normalizePhone(b.phone);
+  const phone = normalizePhone(b.phone, b.country);
   if (phone.error) return res.status(400).json({ error: phone.error });
 
   const rz = razorpay();

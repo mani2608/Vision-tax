@@ -3,7 +3,7 @@ const bcrypt = require('bcryptjs');
 const rateLimit = require('express-rate-limit');
 const { pool, audit } = require('../db');
 const { issueSession, clearSession, requireAuth, readToken } = require('../middleware/auth');
-const { asyncRoute, validators } = require('../lib');
+const { asyncRoute, validators, normalizePhone } = require('../lib');
 
 const router = express.Router();
 
@@ -32,20 +32,27 @@ router.post('/register', authLimiter, asyncRoute(async (req, res) => {
   const firstName = String(b.firstName || '').trim();
   const lastName = String(b.lastName || '').trim();
   const email = String(b.email || '').trim().toLowerCase();
-  const countryCode = String(b.countryCode || '').replace(/\D/g, '');
-  const phoneLocal = String(b.phone || '').replace(/\D/g, '');
+  // Preferred: `phone` as typed (or already E.164) plus `country` (ISO code of the selected country).
+  // Older cached pages send a dial code in `countryCode` and the local digits in `phone`; still understood.
+  let rawPhone = String(b.phone || '').trim();
+  const legacyCode = String(b.countryCode || '').split('-')[0].replace(/\D/g, '');
+  if (!b.country && legacyCode && !/^(\+|00)/.test(rawPhone)) rawPhone = `+${legacyCode}${rawPhone}`;
   const password = String(b.password || '');
 
   const errors = {};
   if (!firstName || firstName.length > 80) errors.firstName = 'First name is required.';
   if (lastName.length > 80) errors.lastName = 'Last name is too long.';
   if (!validators.email(email)) errors.email = 'Enter a valid email address.';
-  if (!validators.phoneDigits(phoneLocal) || phoneLocal.length > 12) errors.phone = 'Enter a valid phone number.';
+  const parsedPhone = normalizePhone(rawPhone, b.country);
+  if (parsedPhone.error) errors.phone = parsedPhone.error;
   if (!validators.strongPassword(password)) errors.password = 'Use 8+ characters with an uppercase letter, a number and a symbol.';
   if (Object.keys(errors).length) return res.status(400).json({ error: Object.values(errors)[0], errors });
 
-  // Store country code + number so the same number in different countries cannot collide
-  const phone = `${countryCode}${phoneLocal}`.slice(0, 24);
+  // Stored as E.164 (+<country code><number>), so the same number in different countries cannot collide.
+  const phone = parsedPhone.value;
+  // Accounts created before E.164 storage hold the same number without the leading '+': that is a duplicate too.
+  const [[dupe]] = await pool.query('SELECT id FROM users WHERE phone IN (?, ?) LIMIT 1', [phone, phone.slice(1)]);
+  if (dupe) return res.status(409).json({ error: 'An account with this phone number already exists.' });
   const hash = await bcrypt.hash(password, 12);
   try {
     const [r] = await pool.query(
