@@ -3,6 +3,7 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState } f
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { api, initials } from '@/lib/api';
+import Notifications from './Notifications';
 
 const ToastCtx = createContext(() => {});
 export const useToast = () => useContext(ToastCtx);
@@ -15,6 +16,7 @@ const NAV = {
     { href: '/dashboard/forms', label: 'Download Tax Information Form', icon: 'fa-clipboard-list' },
     { href: '/dashboard/upload', label: 'Uploads Filing Documents', icon: 'fa-upload' },
     { href: '/dashboard/filings', label: 'View My Filings', icon: 'fa-folder-open' },
+    { href: '/dashboard/payments', label: 'Payments', icon: 'fa-credit-card' },
     { href: '/dashboard/drafts', label: 'Download Tax Return Draft Copy', icon: 'fa-file-arrow-down' },
     { href: '/dashboard/finals', label: 'Download Tax Return Final Copy', icon: 'fa-cloud-arrow-down' },
   ],
@@ -24,6 +26,10 @@ const NAV = {
     { href: '/admin/ongoing', label: 'Ongoing Filing', icon: 'fa-hourglass-half' },
     { href: '/admin/completed', label: 'Completed Filings', icon: 'fa-circle-check' },
     { href: '/admin/users', label: 'User List', icon: 'fa-users' },
+    { href: '/admin/qr', label: 'QR Code Management', icon: 'fa-qrcode' },
+    { href: '/admin/upi', label: 'UPI Management', icon: 'fa-indian-rupee-sign' },
+    { href: '/admin/references', label: 'Payment References', icon: 'fa-file-invoice' },
+    { href: '/admin/payments', label: 'Payment History', icon: 'fa-money-bill-transfer' },
   ],
 };
 
@@ -145,6 +151,7 @@ export default function Shell({ role, children }) {
                 <b>{current ? current.label : 'Dashboard'}</b>
               </div>
               <div className="header-actions">
+                <Notifications onNew={(m) => toast(m)} paymentsHref={role === 'admin' ? '/admin/payments' : '/dashboard/payments'} />
                 <button className="icon-btn theme-btn" onClick={toggleTheme} aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'} title="Toggle theme">
                   <i className={`fa-solid ${theme === 'dark' ? 'fa-sun' : 'fa-moon'}`} />
                 </button>
@@ -158,7 +165,7 @@ export default function Shell({ role, children }) {
                     <div className="menu" role="menu">
                       <div className="menu-head"><strong>{displayName}</strong><span>{user.email}</span></div>
                       <Link href="/change-password" role="menuitem"><i className="fa-solid fa-key" /> Change password</Link>
-                      <a href="/index.html" role="menuitem"><i className="fa-solid fa-globe" /> Visit website</a>
+                      <a href="/index.html" role="menuitem"><i className="fa-solid fa-house" /> Return to Website</a>
                       <button className="danger" onClick={logout} role="menuitem"><i className="fa-solid fa-right-from-bracket" /> Logout</button>
                     </div>
                   )}

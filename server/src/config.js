@@ -14,8 +14,17 @@ const config = {
     database: env.DB_NAME || 'vision_tax',
   },
   jwtSecret: env.JWT_SECRET || '',
+  // Which country's phone rules apply to filings and the Pay Now form: 'IN' (testing phase) or 'US' (default / launch).
+  phoneRegion: String(env.PHONE_REGION || 'US').toUpperCase() === 'IN' ? 'IN' : 'US',
+  razorpay: {
+    keyId: env.RAZORPAY_KEY_ID || '',
+    keySecret: env.RAZORPAY_KEY_SECRET || '',
+    webhookSecret: env.RAZORPAY_WEBHOOK_SECRET || '',
+  },
   uploadDir: path.resolve(__dirname, '..', env.UPLOAD_DIR || './storage'),
   maxFileBytes: (Number(env.MAX_FILE_MB) || 10) * 1024 * 1024,
+  // Hard 5 MB ceiling for documents uploaded by clients (initial and replacement), regardless of .env.
+  userMaxFileBytes: Math.min(Number(env.MAX_FILE_MB) || 5, 5) * 1024 * 1024,
   maxFiles: Number(env.MAX_FILES_PER_UPLOAD) || 10,
 };
 

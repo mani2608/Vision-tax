@@ -186,10 +186,10 @@
         const data = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(data.error || 'Unable to sign in.');
         const u = data.user;
-        VTNotify.toast('success', 'Signed in successfully', 'Redirecting to your dashboard…', { duration: 1500 });
+        VTNotify.toast('success', 'Signed in successfully', 'Taking you to the homepage…', { duration: 1500 });
         submitBtn.innerHTML = '<i class="fa-solid fa-circle-check"></i> Redirecting...';
         setTimeout(() => {
-          window.location.href = u.mustChangePassword ? '/change-password' : (u.role === 'admin' ? '/admin' : '/dashboard');
+          window.location.href = u.mustChangePassword ? '/change-password' : '/index.html';
         }, 700);
       } catch (err) {
         const offline = err instanceof TypeError;

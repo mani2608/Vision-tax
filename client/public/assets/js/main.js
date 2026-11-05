@@ -13,6 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initTaxCalculator();
   initStateRefundSearch();
   initConsultationModal();
+  initPaymentInfo();
   initPaymentModal();
   initContactForm();
 });
@@ -526,18 +527,258 @@ function initPaymentModal() {
     if (e.target === modalOverlay) closeModal();
   });
 
-  // Modal Form Submit
-  const paymentForm = document.getElementById('secure-payment-form');
-  if (paymentForm) {
-    paymentForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const amountInput = document.getElementById('pay-modal-amount');
-      const amountVal = amountInput && amountInput.value ? ' for $' + amountInput.value : '';
-      closeModal();
-      showToast('Payment initiated' + amountVal + '! A secure invoice & receipt link have been emailed.');
-      paymentForm.reset();
+  initRazorpayCheckout(modalOverlay, closeModal);
+}
+
+/* ==========================================================================
+   6c. Razorpay Test-Mode checkout (INR). The amount is re-validated by the server and success is only ever
+   reported after the server has verified the payment signature with Razorpay; the browser never decides it.
+   ========================================================================== */
+function initRazorpayCheckout(modalOverlay, closeModal) {
+  const form = document.getElementById('secure-payment-form');
+  if (!form) return;
+  const $ = (id) => document.getElementById(id);
+  const submitBtn = $('pay-submit-btn');
+  const note = $('pay-method-note');
+  const errBox = $('pay-form-error');
+  const result = $('pay-result');
+  const inr = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' });
+  const MANUAL = { zelle: 'Zelle', paypal: 'PayPal' };
+  let lastOrderId = null;
+
+  const post = async (path, body) => {
+    const r = await fetch(`/api/payments/${path}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', cache: 'no-store', body: JSON.stringify(body) });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(data.error || 'Request failed.');
+    return data;
+  };
+
+  function loadRazorpay() {
+    if (window.Razorpay) return Promise.resolve();
+    return new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      s.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      s.onload = resolve;
+      s.onerror = () => reject(new Error('Could not load the secure checkout. Check your connection and try again.'));
+      document.head.appendChild(s);
     });
   }
+
+  const setError = (msg) => { errBox.textContent = msg || ''; errBox.hidden = !msg; };
+  const showForm = () => { result.hidden = true; form.hidden = false; setError(''); };
+
+  function showResult({ status, message, reason, reference, amount, currency, orderId }) {
+    const ui = {
+      successful: ['fa-circle-check', '#10b981', 'Payment successful'],
+      pending: ['fa-hourglass-half', '#d97706', 'Payment pending'],
+      failed: ['fa-circle-xmark', '#dc2626', 'Payment failed'],
+      cancelled: ['fa-ban', '#64748b', 'Payment cancelled'],
+      refunded: ['fa-rotate-left', '#64748b', 'Payment refunded'],
+      created: ['fa-circle-info', '#64748b', 'Payment not completed'],
+    }[status] || ['fa-circle-info', '#64748b', 'Payment status'];
+    lastOrderId = orderId || lastOrderId;
+    $('pay-result-icon').innerHTML = `<i class="fa-solid ${ui[0]}" style="color:${ui[1]}"></i>`;
+    $('pay-result-title').textContent = ui[2];
+    $('pay-result-msg').textContent = reason && status === 'failed' ? `${message} (${reason})` : message;
+    const dl = $('pay-result-details');
+    dl.textContent = '';
+    const rows = [];
+    if (amount) rows.push(['Amount', inr.format(Number(amount))]);
+    if (reference) rows.push(['Transaction ID', reference]);
+    if (orderId) rows.push(['Order ID', orderId]);
+    rows.forEach(([k, v]) => {
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;justify-content:space-between;gap:12px;padding:3px 0;';
+      const dt = document.createElement('dt'); dt.textContent = k; dt.style.color = '#64748b';
+      const dd = document.createElement('dd'); dd.textContent = v; dd.style.cssText = 'margin:0;font-weight:600;word-break:break-all;text-align:right;';
+      row.append(dt, dd); dl.appendChild(row);
+    });
+    dl.style.display = rows.length ? 'block' : 'none';
+    $('pay-result-check').hidden = !(status === 'pending' || status === 'created');
+    $('pay-result-retry').hidden = !(status === 'failed' || status === 'cancelled' || status === 'created');
+    form.hidden = true;
+    result.hidden = false;
+  }
+
+  function applyMethod() {
+    const m = (form.querySelector('input[name="pay_gateway"]:checked') || {}).value;
+    if (MANUAL[m]) {
+      note.textContent = `${MANUAL[m]} is a manual payment option and is not available for online checkout. Please use the payment details shown on this page, or choose Card for secure online payment.`;
+      note.hidden = false;
+      submitBtn.disabled = true;
+      submitBtn.style.opacity = '0.55';
+      submitBtn.style.cursor = 'not-allowed';
+    } else {
+      note.hidden = true;
+      submitBtn.disabled = false;
+      submitBtn.style.opacity = '';
+      submitBtn.style.cursor = '';
+    }
+  }
+  form.querySelectorAll('input[name="pay_gateway"]').forEach((r) => r.addEventListener('change', applyMethod));
+  applyMethod();
+
+  // Phone placeholder follows the active market (Indian numbers while testing, U.S. at launch); the server validates.
+  fetch('/api/public/config', { cache: 'no-store' })
+    .then((r) => (r.ok ? r.json() : null))
+    .then((c) => { if (c && c.phonePlaceholder) $('pay-modal-phone').placeholder = c.phonePlaceholder; })
+    .catch(() => {});
+
+  // Plan prices come from the server (display only; the server recomputes the amount on every order).
+  const planSel = $('pay-modal-plan');
+  const amountEl = $('pay-modal-amount');
+  const refWrap = $('pay-ref-wrap');
+  const refEl = $('pay-modal-ref');
+  let plans = {};
+  function syncPlan() {
+    const p = plans[planSel.value];
+    const custom = Boolean(p) && p.amount === null;
+    refWrap.hidden = !custom;
+    amountEl.value = p && p.amount ? p.amount : '';
+    amountEl.placeholder = custom ? 'Enter your reference' : (p ? 'Price unavailable' : 'Select a plan');
+    if (!custom) refEl.value = '';
+  }
+  async function lookupReference() {
+    const code = refEl.value.trim().toUpperCase();
+    refEl.value = code;
+    amountEl.value = '';
+    if (!code) return;
+    try {
+      const r = await fetch(`/api/payments/reference/${encodeURIComponent(code)}`, { cache: 'no-store' });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error || 'Invalid reference.');
+      amountEl.value = d.amount;
+      setError('');
+    } catch (err) { setError(err.message); }
+  }
+  planSel.addEventListener('change', () => { setError(''); syncPlan(); });
+  refEl.addEventListener('change', lookupReference);
+  form.addEventListener('reset', () => setTimeout(syncPlan));
+  fetch('/api/payments/plans', { cache: 'no-store' })
+    .then((r) => (r.ok ? r.json() : null))
+    .then((d) => { if (d && d.plans) { plans = d.plans; syncPlan(); } })
+    .catch(() => {});
+
+  // Reset to the form when the popup is closed (unless a payment is still pending verification).
+  let lastStatus = null;
+  new MutationObserver(() => {
+    if (!modalOverlay.classList.contains('active') && !result.hidden && lastStatus !== 'pending') {
+      if (lastStatus === 'successful') form.reset();
+      showForm();
+    }
+  }).observe(modalOverlay, { attributes: true, attributeFilter: ['class'] });
+  const show = (r) => { lastStatus = r.status; showResult(r); };
+
+  $('pay-result-close').addEventListener('click', () => { closeModal(); if (lastStatus !== 'pending') { if (lastStatus === 'successful') form.reset(); showForm(); } });
+  $('pay-result-retry').addEventListener('click', showForm);
+  $('pay-result-check').addEventListener('click', async () => {
+    if (!lastOrderId) return;
+    const btn = $('pay-result-check');
+    btn.disabled = true;
+    try {
+      const r = await fetch(`/api/payments/status/${encodeURIComponent(lastOrderId)}`, { cache: 'no-store', credentials: 'same-origin' });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.error || 'Could not check the status.');
+      show(data);
+    } catch (e) { $('pay-result-msg').textContent = e.message; } finally { btn.disabled = false; }
+  });
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    setError('');
+    const method = (form.querySelector('input[name="pay_gateway"]:checked') || {}).value;
+    if (MANUAL[method]) return applyMethod(); // never simulate a payment for manual methods
+    const payload = {
+      plan: planSel.value,
+      amount: amountEl.value.trim(), // display value only: the server uses its own price and rejects a mismatch
+      reference: refEl.value.trim().toUpperCase(),
+      name: $('pay-modal-name').value.trim(),
+      email: $('pay-modal-email').value.trim(),
+      phone: $('pay-modal-phone').value.trim(),
+      method,
+    };
+    if (!refWrap.hidden && !payload.reference) return setError('Enter the payment reference you received from Vision-Tax.');
+    if (!payload.amount) return setError(refWrap.hidden ? 'The price for this plan could not be loaded. Please refresh the page.' : 'Enter a valid payment reference to see the amount.');
+    if (payload.name.length < 2) return setError('Enter your full name.');
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(payload.email)) return setError('Enter a valid email address.');
+    if (!/^\+?[\d\s\-().]{7,20}$/.test(payload.phone)) return setError('Enter a valid phone number.');
+
+    const label = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Starting secure checkout…';
+    const restore = () => { submitBtn.innerHTML = label; applyMethod(); };
+    let order;
+    try {
+      [order] = await Promise.all([post('order', payload), loadRazorpay()]);
+    } catch (err) { restore(); return setError(err.message); }
+    restore();
+    lastOrderId = order.orderId;
+
+    let settled = false;
+    let failure = null;
+    const rzp = new window.Razorpay({
+      key: order.keyId,
+      amount: order.amount,
+      currency: order.currency,
+      order_id: order.orderId,
+      name: 'Vision-Tax',
+      description: order.description,
+      prefill: order.prefill,
+      theme: { color: '#d9a900' },
+      handler: async (resp) => {
+        settled = true;
+        try { show(await post('verify', resp)); } catch (err) {
+          // Could not reach our server to verify: do NOT claim success; let the user re-check.
+          show({ status: 'pending', message: 'We could not confirm your payment yet. Please check the status in a moment.', orderId: order.orderId, amount: (order.amount / 100).toFixed(2), currency: order.currency });
+        }
+      },
+      modal: {
+        ondismiss: async () => {
+          if (settled) return;
+          settled = true;
+          // The server asks Razorpay what actually happened; we never tell it the payment failed.
+          try { show(await post(failure ? 'failure' : 'cancel', { razorpay_order_id: order.orderId })); } catch (err) { setError(err.message); }
+        },
+      },
+    });
+    rzp.on('payment.failed', (resp) => { failure = resp && resp.error ? resp.error : { description: 'Payment failed.' }; });
+    rzp.open();
+  });
+}
+
+/* ==========================================================================
+   6d. Homepage QR code + UPI ID (managed from Admin → QR Code / UPI). Always read from the backend.
+   ========================================================================== */
+function initPaymentInfo() {
+  const img = document.getElementById('pay-qr-img');
+  if (!img) return;
+  const empty = document.getElementById('pay-qr-empty');
+  const upi = document.getElementById('pay-upi-text');
+  const instr = document.getElementById('pay-qr-instruction');
+
+  function render(info) {
+    const hasQr = Boolean(info && info.qr && info.qr.url);
+    if (hasQr) { if (img.getAttribute('src') !== info.qr.url) img.src = info.qr.url; } else img.removeAttribute('src');
+    img.hidden = !hasQr;
+    empty.hidden = hasQr;
+    instr.hidden = !hasQr;
+    upi.textContent = info && info.upi ? `UPI – ${info.upi}` : 'UPI ID not available';
+  }
+  // A missing/broken image must never show as a broken-image icon.
+  img.addEventListener('error', () => render({ qr: null, upi: upi.dataset.upi || null }));
+
+  async function load() {
+    try {
+      const r = await fetch('/api/public/payment-info', { cache: 'no-store', credentials: 'same-origin' });
+      if (!r.ok) throw new Error('bad status');
+      const info = await r.json();
+      upi.dataset.upi = info.upi || '';
+      render(info);
+    } catch { render(null); }
+  }
+  load();
+  window.addEventListener('pageshow', (e) => { if (e.persisted) load(); });
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) load(); });
 }
 
 

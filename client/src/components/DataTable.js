@@ -4,7 +4,7 @@ import { api, downloadUrl, initials, STATUS_LABEL } from '@/lib/api';
 
 // Server-driven table: search, sort, page size and pagination are all handled by the API.
 // columns: [{ label, sort?: 'apiSortKey', render: (row, index) => node }]
-export default function DataTable({ endpoint, params = {}, columns, defaultSort, defaultDir = 'desc', topSearch, emptyText = 'No records found.', emptyIcon = 'fa-inbox', refreshKey = 0 }) {
+export default function DataTable({ endpoint, params = {}, columns, defaultSort, defaultDir = 'desc', topSearch, emptyText = 'No records found.', emptyIcon = 'fa-inbox', refreshKey = 0, compact = false }) {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [q, setQ] = useState('');
@@ -71,7 +71,7 @@ export default function DataTable({ endpoint, params = {}, columns, defaultSort,
         </label>
       </div>
       <div className="table-wrap" style={{ opacity: state === 'refreshing' ? 0.6 : 1 }}>
-        <table className="dt">
+        <table className={compact ? "dt compact" : "dt"}>
           <thead>
             <tr>
               <th className="sortable" onClick={() => toggleSort(defaultSort)}>S.No<SortIcon on={sort === defaultSort} dir={dir} /></th>

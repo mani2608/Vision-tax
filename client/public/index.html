@@ -21,7 +21,8 @@
     href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap">
 
   <!-- Custom Modern Stylesheet -->
-  <link rel="stylesheet" href="assets/css/style.css?v=4.5">
+  <link rel="stylesheet" href="assets/css/style.css?v=4.6">
+  <link rel="stylesheet" href="assets/css/account-menu.css?v=1">
 </head>
 
 <body>
@@ -1144,16 +1145,17 @@
 
       <!-- Dual Payment Cards Grid (Matching Reference Design) -->
       <div class="secure-dual-cards-grid">
-        <!-- LEFT CARD: Zelle QR Code Payment -->
-        <div class="payment-method-card zelle-payment-card">
+        <!-- LEFT CARD: QR Code + UPI ID (loaded from /api/public/payment-info; managed in Admin) -->
+        <div class="payment-method-card zelle-payment-card" id="payment-info-card">
           <div class="qr-code-box">
-            <img src="assets/images/zelle_qr.svg" alt="Zelle QR Code" class="qr-code-img">
+            <img id="pay-qr-img" alt="Payment QR code" class="qr-code-img" hidden>
+            <p id="pay-qr-empty" class="zelle-instruction-text" style="text-align:center;">QR code is not available right now.</p>
           </div>
           <div class="zelle-handle-row">
-            <span class="zelle-icon-badge">Z</span>
-            <span class="zelle-handle-text">Zelle &ndash; contact@vision-tax.com</span>
+            <span class="zelle-icon-badge">UPI</span>
+            <span class="zelle-handle-text" id="pay-upi-text">UPI ID not available</span>
           </div>
-          <p class="zelle-instruction-text">Scan this code in your bank&rsquo;s app to pay Vision-Tax.</p>
+          <p class="zelle-instruction-text" id="pay-qr-instruction" hidden>Scan this code in your payment app to pay Vision-Tax.</p>
         </div>
 
         <!-- RIGHT CARD: Pay Now Online / PayGlocal -->
@@ -1453,7 +1455,7 @@
       <button class="modal-close-btn" aria-label="Close modal"
         onclick="document.getElementById('payment-modal')?.classList.remove('active'); document.body.style.overflow='';"><i
           class="fa-solid fa-xmark"></i></button>
-      <div style="margin-bottom: 20px;">
+      <div style="margin-bottom: 16px;">
         <span class="secure-badge" style="margin-bottom: 8px;">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
@@ -1468,7 +1470,7 @@
       </div>
 
       <form id="secure-payment-form">
-        <div style="display: flex; flex-direction: column; gap: 16px;">
+        <div class="pay-form-grid">
           <div>
             <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px;">Select Filing Plan
               *</label>
@@ -1482,28 +1484,34 @@
             </select>
           </div>
           <div>
-            <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px;">Payment Amount ($
-              USD) *</label>
+            <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px;">Payment Amount (₹
+              INR) *</label>
             <div class="input-with-icon">
-              <span class="input-icon-prefix">$</span>
-              <input type="number" id="pay-modal-amount" name="amount" class="form-control"
-                placeholder="Enter amount (e.g. 99)" min="1" step="any" required>
+              <span class="input-icon-prefix">₹</span>
+              <input type="text" id="pay-modal-amount" name="amount" class="form-control" inputmode="decimal"
+                placeholder="Select a plan" readonly required aria-describedby="pay-amount-hint">
             </div>
+            <small id="pay-amount-hint" style="display:block; margin-top:4px; font-size:0.75rem; color: var(--gray-500);">Set by Vision-Tax for the selected plan.</small>
+          </div>
+          <div id="pay-ref-wrap" class="pay-span-2" hidden>
+            <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px;">Payment Reference *</label>
+            <input type="text" id="pay-modal-ref" class="form-control" placeholder="e.g. VT-ABCD2345" maxlength="24" autocomplete="off" style="text-transform: uppercase;">
+            <small style="display:block; margin-top:4px; font-size:0.75rem; color: var(--gray-500);">Custom payments need a reference code from Vision-Tax. The amount is filled in from your reference.</small>
           </div>
           <div>
             <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px;">Full Name *</label>
-            <input type="text" class="form-control" placeholder="e.g. Rahul Sharma" required>
+            <input type="text" id="pay-modal-name" class="form-control" placeholder="e.g. Rahul Sharma" maxlength="100" required>
           </div>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div style="display: contents;">
             <div>
               <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px;">Email Address
                 *</label>
-              <input type="email" class="form-control" placeholder="rahul@example.com" required>
+              <input type="email" id="pay-modal-email" class="form-control" placeholder="rahul@example.com" required>
             </div>
             <div>
               <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px;">Phone Number
                 *</label>
-              <input type="tel" class="form-control" placeholder="+1 (555) 000-0000" required>
+              <input type="tel" id="pay-modal-phone" class="form-control" placeholder="+1 (555) 000-0000" maxlength="20" required>
             </div>
           </div>
           <div>
@@ -1523,23 +1531,43 @@
                 <span><i class="fa-brands fa-paypal" style="color: #003087;"></i> PayPal</span>
               </label>
             </div>
+            <p id="pay-method-note" hidden
+              style="margin-top: 8px; font-size: 0.8rem; color: #92400e; background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 8px 10px;"></p>
           </div>
-          <button type="submit" class="btn btn-primary"
+          <p id="pay-form-error" role="alert" hidden class="pay-span-2"
+            style="margin: 0; font-size: 0.85rem; color: #b91c1c; background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 8px 10px;"></p>
+          <button type="submit" id="pay-submit-btn" class="btn btn-primary pay-span-2"
             style="width: 100%; padding: 13px; font-size: 1rem; font-weight: 700;">
             Proceed to Secure Checkout <i class="fa-solid fa-arrow-right"></i>
           </button>
-          <div
+          <div class="pay-span-2"
             style="display: flex; justify-content: space-between; align-items: center; font-size: 0.78rem; color: var(--gray-500); padding-top: 4px;">
             <span><i class="fa-solid fa-shield-halved" style="color: #10b981;"></i> 100% Money-Back Guarantee</span>
             <span>Secured by <strong>PayGlocal</strong></span>
           </div>
         </div>
       </form>
+
+      <!-- Payment result (success / failed / pending / cancelled) -->
+      <div id="pay-result" hidden aria-live="polite" style="text-align: center; padding: 8px 0 4px;">
+        <div id="pay-result-icon" style="font-size: 2.6rem; margin-bottom: 8px;"></div>
+        <h4 id="pay-result-title" style="font-size: 1.25rem; font-weight: 800; color: var(--gray-900); margin-bottom: 6px;"></h4>
+        <p id="pay-result-msg" style="font-size: 0.92rem; color: var(--gray-500); margin-bottom: 12px;"></p>
+        <dl id="pay-result-details"
+          style="display: none; text-align: left; font-size: 0.88rem; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 14px; margin: 0 0 14px;"></dl>
+        <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+          <button type="button" class="btn btn-primary" id="pay-result-check" hidden>Check payment status</button>
+          <button type="button" class="btn btn-primary" id="pay-result-retry" hidden>Try again</button>
+          <button type="button" class="btn" id="pay-result-close" style="border: 1px solid #cbd5e1;">Close</button>
+        </div>
+      </div>
     </div>
   </div>
 
   <!-- Scripts -->
-  <script src="assets/js/main.js?v=2.2"></script>
+  <script src="assets/js/main.js?v=2.6"></script>
+  <script src="assets/js/notify.js"></script>
+  <script src="assets/js/account-menu.js?v=1"></script>
 </body>
 
 </html>
