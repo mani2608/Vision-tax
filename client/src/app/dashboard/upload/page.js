@@ -2,17 +2,18 @@
 import { Suspense, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { api, FILING_TYPES, ALLOWED_EXT, MAX_FILE_MB, MAX_FILES, fmtSize, fileProblem, VTPhone, fmtPhone, loadPublicConfig } from '@/lib/api';
+import { api, FILING_TYPES, filingYears, ALLOWED_EXT, MAX_FILE_MB, MAX_FILES, fmtSize, fileProblem, VTPhone, fmtPhone, loadPublicConfig } from '@/lib/api';
 import { useToast } from '@/components/Shell';
 import PageHeader from '@/components/PageHeader';
 import PhoneField from '@/components/PhoneField';
+import { IconBtn } from '@/components/DataTable';
 
 // Same rules for submitting and editing (the server enforces them again).
 function validateDetails(v, country, skipPhone) {
   if (!v.name.trim() || v.name.trim().length > 150) return 'Filing name is required.';
   if (!FILING_TYPES.includes(v.type)) return 'Select a valid filing type.';
   const y = Number(v.year);
-  if (!/^\d{4}$/.test(String(v.year).trim()) || y < 2000 || y > new Date().getFullYear() + 1) return 'Enter a valid filing year.';
+  if (!/^\d{4}$/.test(String(v.year).trim()) || y < 2000 || y > new Date().getFullYear() + 1) return 'Select a valid filing year.';
   if (skipPhone) return '';
   const p = VTPhone.parse(v.contact, country);
   return p.ok ? '' : p.error;
@@ -34,6 +35,11 @@ function UploadFiling() {
   const [blocked, setBlocked] = useState('');
   const [values, setValues] = useState({ name: '', type: '', year: '', contact: '' });
   const [original, setOriginal] = useState(null);
+  // Edit mode: the filing's current documents. Nothing is changed on the server until "Save Changes";
+  // removed = marked for removal, replacement = a newly chosen File that will replace it.
+  const [docs, setDocs] = useState([]);
+  const docInput = useRef(null);
+  const replacing = useRef(null);
   const [reviewing, setReviewing] = useState(false);
   // Contact number: free text + selected country. defaultCountry only pre-selects the dropdown; any country is accepted.
   const [contact, setContact] = useState({ text: '', country: 'US' });
@@ -52,10 +58,30 @@ function UploadFiling() {
         // Pre-fill the saved number as country + national digits; a value that cannot be read is shown as-is.
         const parts = VTPhone.split(filing.contact);
         setContact(parts ? { text: parts.national, country: parts.country || 'US' } : { text: filing.contact, country: 'US' });
+        setDocs((filing.files || []).map((f) => ({ id: f.id, name: f.name, removed: false, replacement: null })));
         setValues(v); setOriginal(v); setLoaded(true);
       })
       .catch((e) => setBlocked(e.message));
   }, [editing, editId]);
+
+  // ---- existing documents (edit mode) ----
+  const patchDoc = (id, change) => setDocs((list) => list.map((d) => (d.id === id ? { ...d, ...change } : d)));
+  const kept = docs.filter((d) => !d.removed).length;
+  function removeDoc(d) {
+    if (kept <= 1) return setError('A filing must keep at least one document. Use the pen icon to replace it with another file instead.');
+    setError(''); patchDoc(d.id, { removed: true, replacement: null });
+  }
+  function chooseReplacement(d) { replacing.current = d.id; docInput.current.click(); }
+  function onReplacement(e) {
+    const f = e.target.files[0];
+    e.target.value = '';
+    const id = replacing.current;
+    if (!f || id == null) return;
+    const p = fileProblem(f);
+    if (p) return setError(p);
+    setError(''); patchDoc(id, { replacement: f, removed: false });
+  }
+  const docChanges = docs.filter((d) => d.removed || d.replacement);
 
   const onPick = (e) => setFiles(Array.from(e.target.files));
   const onDrop = (e) => {
@@ -113,8 +139,15 @@ function UploadFiling() {
   async function saveChanges() {
     setBusy(true); setError('');
     try {
+      // Documents first (replacements, then removals); only now are the originals actually replaced or removed.
+      for (const d of docs.filter((x) => x.replacement)) {
+        const body = new FormData();
+        body.append('files', d.replacement);
+        await api(`/user/files/${d.id}`, { method: 'PUT', body });
+      }
+      for (const d of docs.filter((x) => x.removed)) await api(`/user/files/${d.id}`, { method: 'DELETE' });
       const r = await api(`/user/filings/${editId}`, { method: 'PUT', body: { ...values, contactCountry: contact.country } });
-      toast(r.unchanged ? 'No changes to save.' : 'Filing updated successfully.');
+      toast(r.unchanged && docChanges.length === 0 ? 'No changes to save.' : 'Filing updated successfully.');
       router.push('/dashboard/filings');
     } catch (err) {
       setError(err.message);
@@ -150,6 +183,11 @@ function UploadFiling() {
                 <span>{label}</span><span>{k === 'contact' ? fmtPhone(values[k]) : values[k]}</span>
               </li>
             ))}
+            {docChanges.map((d) => (
+              <li key={d.id} className="changed">
+                <span>Document</span><span>{d.replacement ? `${d.name} → ${d.replacement.name}` : `${d.name} (removed)`}</span>
+              </li>
+            ))}
           </ul>
           {error && <p role="alert" className="alert"><i className="fa-solid fa-circle-exclamation" />{error}</p>}
           <div className="inline-actions">
@@ -165,7 +203,7 @@ function UploadFiling() {
     <>
       <PageHeader
         title={editing ? 'Edit Filing' : 'Apply for Filing'}
-        subtitle={editing ? 'Correct the details of your submitted filing. Documents can be replaced from My Filings.' : 'Tell us about your return and attach your tax documents. Files are encrypted in transit and stored privately.'}
+        subtitle={editing ? 'Correct the details of your submitted filing. You can also replace or remove its documents below.' : 'Tell us about your return and attach your tax documents. Files are encrypted in transit and stored privately.'}
       />
       <form className={editing ? 'card' : 'card form-grid'} onSubmit={submit} noValidate style={{ padding: 28, ...(editing ? { maxWidth: 560 } : {}) }}>
         <div>
@@ -179,10 +217,40 @@ function UploadFiling() {
                 {FILING_TYPES.map((t) => <option key={t}>{t}</option>)}
               </select>
             </div>
-            <div className="field"><label htmlFor="year">Filing Year</label><input id="year" name="year" className="input" inputMode="numeric" maxLength={4} required placeholder="2025" defaultValue={values.year} /></div>
+            <div className="field">
+              <label htmlFor="year">Filing Year</label>
+              <select id="year" name="year" className="select" required defaultValue={values.year}>
+                <option value="" disabled>Select Year</option>
+                {filingYears(values.year).map((y) => <option key={y} value={y}>{y}</option>)}
+              </select>
+            </div>
           </div>
           <PhoneField id="contact" label="Contact Number" required value={contact} error={phoneErr}
             onChange={(c) => { touched.current = true; setPhoneErr(false); setContact(c); }} />
+          {editing && docs.length > 0 && (
+            <div className="field">
+              <label>Uploaded documents</label>
+              <input ref={docInput} type="file" hidden accept={ALLOWED_EXT.map((e) => `.${e}`).join(',')} onChange={onReplacement} />
+              <ul className="chosen doc-edit">
+                {docs.map((d) => (
+                  <li key={d.id} className={d.removed ? 'removed' : ''}>
+                    <span className="f"><i className="fa-solid fa-file-lines" /><span>{d.replacement ? d.replacement.name : d.name}<small>{d.removed ? 'Will be removed when you save' : d.replacement ? `New file · ${fmtSize(d.replacement.size)} · replaces ${d.name}` : 'Current file'}</small></span></span>
+                    <span className="icon-acts">
+                      {d.removed
+                        ? <button type="button" className="link-btn plain" onClick={() => patchDoc(d.id, { removed: false })}>Undo</button>
+                        : (
+                          <>
+                            <IconBtn icon="fa-pen" tone="edit" label={`Replace ${d.name}`} onClick={() => chooseReplacement(d)} />
+                            <IconBtn icon="fa-xmark" tone="delete" label={`Remove ${d.replacement ? d.replacement.name : d.name}`} onClick={() => (d.replacement ? patchDoc(d.id, { replacement: null }) : removeDoc(d))} />
+                          </>
+                        )}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              <p className="muted field-hint">Changes to documents are applied only when you save. Cancel keeps your original files.</p>
+            </div>
+          )}
           {!editing && (
             <div className="field">
               <label htmlFor="files">Documents</label>

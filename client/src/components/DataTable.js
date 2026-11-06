@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { api, downloadUrl, initials, STATUS_LABEL } from '@/lib/api';
 
 // Server-driven table: search, sort, page size and pagination are all handled by the API.
@@ -16,6 +16,26 @@ export default function DataTable({ endpoint, params = {}, columns, defaultSort,
   const [data, setData] = useState({ rows: [], total: 0 });
   const [state, setState] = useState('loading');
   const [error, setError] = useState('');
+  const cardRef = useRef(null);
+
+  // Responsive fit without a sideways scrollbar: lay the table out as normal columns first; if it is wider than its
+  // container, flag the card (data-stk) so CSS shows each record as a stacked, labelled card instead. Runs before paint.
+  const fit = () => {
+    const card = cardRef.current;
+    const wrap = card && card.querySelector('.table-wrap');
+    if (!wrap) return;
+    delete card.dataset.stk;
+    if (wrap.scrollWidth > wrap.clientWidth + 1) card.dataset.stk = '1';
+  };
+  useLayoutEffect(fit);
+  useEffect(() => {
+    const card = cardRef.current;
+    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(fit) : null;
+    if (ro && card) ro.observe(card);
+    window.addEventListener('resize', fit);
+    return () => { if (ro) ro.disconnect(); window.removeEventListener('resize', fit); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => { const t = setTimeout(() => { setDq(q); setPage(1); }, 300); return () => clearTimeout(t); }, [q]);
   useEffect(() => { const t = setTimeout(() => { setDname(name); setPage(1); }, 300); return () => clearTimeout(t); }, [name]);
@@ -51,7 +71,7 @@ export default function DataTable({ endpoint, params = {}, columns, defaultSort,
   const searching = dq || dname;
 
   return (
-    <div className="card">
+    <div className="card" ref={cardRef}>
       {topSearch && (
         <div className="top-wrap">
           <i className="fa-solid fa-magnifying-glass" aria-hidden />
@@ -65,13 +85,20 @@ export default function DataTable({ endpoint, params = {}, columns, defaultSort,
           </select>
           entries
         </label>
+        <label className="sort-pick">Sort
+          <select value={`${sort || ''}|${dir}`} onChange={(e) => { const [k, d] = e.target.value.split('|'); setSort(k); setDir(d); setPage(1); }} aria-label="Sort by">
+            {[{ label: 'Newest first', sort: defaultSort, dir: 'desc' }, { label: 'Oldest first', sort: defaultSort, dir: 'asc' }]
+              .concat(columns.filter((c) => c.sort && c.sort !== defaultSort).flatMap((c) => [{ label: `${c.label} A–Z`, sort: c.sort, dir: 'asc' }, { label: `${c.label} Z–A`, sort: c.sort, dir: 'desc' }]))
+              .map((o) => <option key={o.label} value={`${o.sort}|${o.dir}`}>{o.label}</option>)}
+          </select>
+        </label>
         <label className="searchbox">
           <i className="fa-solid fa-magnifying-glass" aria-hidden />
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search…" aria-label="Search" />
         </label>
       </div>
       <div className="table-wrap" style={{ opacity: state === 'refreshing' ? 0.6 : 1 }}>
-        <table className={compact ? "dt compact" : "dt"}>
+        <table className={compact ? 'dt compact' : 'dt'}>
           <thead>
             <tr>
               <th className="sortable" onClick={() => toggleSort(defaultSort)}>S.No<SortIcon on={sort === defaultSort} dir={dir} /></th>
@@ -95,8 +122,8 @@ export default function DataTable({ endpoint, params = {}, columns, defaultSort,
             )}
             {ready && data.rows.map((row, i) => (
               <tr key={row.id}>
-                <td className="sno">{(page - 1) * limit + i + 1}</td>
-                {columns.map((c) => <td key={c.label}>{c.render(row, i)}</td>)}
+                <td className="sno" data-label="S.No">{(page - 1) * limit + i + 1}</td>
+                {columns.map((c) => <td key={c.label} data-label={c.label}>{c.render(row, i)}</td>)}
               </tr>
             ))}
           </tbody>
@@ -122,11 +149,12 @@ export function StatusBadge({ status }) {
   return <span className={`badge ${status}`}>{STATUS_LABEL[status] || status}</span>;
 }
 
-export function UserCell({ name, sub }) {
+// Name only (the email stays in the database and in the details popup). Pass children to render the name as a link.
+export function UserCell({ name, children }) {
   return (
     <div className="cell-user">
       <span className="avatar sm" aria-hidden>{initials(name)}</span>
-      <div><strong>{name}</strong>{sub && <span>{sub}</span>}</div>
+      <div><strong>{children || name}</strong></div>
     </div>
   );
 }
@@ -136,11 +164,23 @@ const fileIcon = (n = '') => {
   return e === 'pdf' ? 'fa-file-pdf' : e === 'docx' ? 'fa-file-word' : ['csv', 'json', 'xml'].includes(e) ? 'fa-file-code' : 'fa-file-lines';
 };
 
-export function FileLinks({ files, empty = 'No files' }) {
+// `actions(file)` optionally renders small icon buttons beside each file (used for admin-uploaded documents).
+export function FileLinks({ files, empty = 'No files', actions, tag }) {
   if (!files || files.length === 0) return <span className="muted">{empty}</span>;
   return (
     <ul className="file-list">
-      {files.map((f) => <li key={f.id}><a href={downloadUrl(f.id)} title={f.name}><i className={`fa-solid ${fileIcon(f.name)}`} /><span>{f.name}</span></a></li>)}
+      {files.map((f) => (
+        <li key={f.id}>
+          {tag && <span className={`ftag ${tag(f).toLowerCase()}`}>{tag(f)}</span>}
+          <a href={downloadUrl(f.id)} title={f.name}><i className={`fa-solid ${fileIcon(f.name)}`} /><span>{f.name}</span></a>
+          {actions && <span className="file-actions">{actions(f)}</span>}
+        </li>
+      ))}
     </ul>
   );
+}
+
+// Small icon button with a tooltip. tone: view | edit | delete
+export function IconBtn({ icon, label, tone = 'edit', onClick, disabled }) {
+  return <button type="button" className={`icon-act ${tone}`} title={label} aria-label={label} onClick={onClick} disabled={disabled}><i className={`fa-solid ${icon}`} /></button>;
 }

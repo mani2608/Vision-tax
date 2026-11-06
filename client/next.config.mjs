@@ -1,5 +1,4 @@
-const API = process.env.API_ORIGIN || 'http://localhost:4000';
-
+const API = process.env.API_ORIGIN || 'http://127.0.0.1:4000';
 /** @type {import('next').NextConfig} */
 export default {
   poweredByHeader: false,

@@ -254,15 +254,24 @@ export function ReferenceCards({ refreshKey = 0, onChanged }) {
 }
 
 // ---- Client payment history (own payments only) -----------------------------------------------------------------------
+// Every payment record of the signed-in client: pending, successful, failed, cancelled, refunded, plus requested references
+// that have not been paid yet (shown as Pending / Expired / Cancelled). One compact row per record.
 export function PaymentHistory({ refreshKey = 0 }) {
+  const [paying, setPaying] = useState(null);
+  const [bump, setBump] = useState(0);
   const columns = [
-    { label: 'Date', sort: 'date', render: (r) => <span style={{ whiteSpace: 'nowrap' }}>{fmtDateTime(r.paidAt || r.createdAt)}</span> },
-    { label: 'Filing', render: (r) => (r.filingType ? `${r.filingType} · ${r.filingYear}` : '—') },
-    { label: 'Reference', sort: 'code', render: (r) => <strong>{r.reference || '—'}</strong> },
-    { label: 'Amount', sort: 'amount', render: (r) => money(r.amountPaise) },
-    { label: 'Method', render: (r) => methodName(r.method) },
+    { label: 'Filing Type', sort: 'type', render: (r) => (r.filingType ? <span className="chip">{r.filingType}</span> : '—') },
+    { label: 'Filing Year', sort: 'year', render: (r) => r.filingYear || '—' },
+    { label: 'Payment ID / Transaction ID', sort: 'code', render: (r) => <span className="txn" title={r.txn}>{r.txn || '—'}</span> },
+    { label: 'Amount', sort: 'amount', render: (r) => <span className="nowrap">{money(r.amountPaise)}</span> },
     { label: 'Status', sort: 'status', render: (r) => <PayBadge status={r.status} /> },
-    { label: 'Payment ID', render: (r) => r.razorpayPaymentId || '—' },
+    { label: 'Payment Date', sort: 'date', render: (r) => <span className="nowrap" title={r.failureReason || ''}>{r.date ? fmtDateTime(r.date) : '—'}</span> },
+    { label: 'Action', render: (r) => (r.payable ? <button className="btn sm" onClick={() => setPaying({ code: r.reference, amountPaise: r.amountPaise, expiresAt: r.expiresAt, note: r.note, filingType: r.filingType, filingYear: r.filingYear, filingName: r.filingName })}><i className="fa-solid fa-lock" />Pay Now</button> : <span className="muted">—</span>) },
   ];
-  return <DataTable endpoint="/user/payments" columns={columns} defaultSort="date" emptyIcon="fa-credit-card" emptyText="You have no payments yet." refreshKey={refreshKey} />;
+  return (
+    <>
+      <DataTable endpoint="/user/payments" columns={columns} defaultSort="date" emptyIcon="fa-credit-card" emptyText="You have no payments yet." refreshKey={refreshKey + bump} />
+      {paying && <PayDialog reference={paying} onClose={() => setPaying(null)} onChanged={() => setBump((k) => k + 1)} />}
+    </>
+  );
 }

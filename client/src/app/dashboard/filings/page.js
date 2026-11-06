@@ -1,54 +1,33 @@
 'use client';
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
-import DataTable, { FileLinks, StatusBadge } from '@/components/DataTable';
+import DataTable, { FileLinks, IconBtn, StatusBadge } from '@/components/DataTable';
 import PageHeader from '@/components/PageHeader';
 import Modal from '@/components/Modal';
+import FilingDetails, { FilingName } from '@/components/FilingDetails';
 import { useToast } from '@/components/Shell';
-import { ReferenceCards } from '@/components/ClientPayments';
-import { api, ALLOWED_EXT, MAX_FILE_MB, fileProblem, fmtSize, fmtPhone } from '@/lib/api';
+import { api, fmtPhone } from '@/lib/api';
 
-// Pick a corrected document, show its name/size, confirm, then upload it over the existing record.
-function ReplaceDialog({ file, onClose, onDone }) {
+// Confirmation before a filing (and its documents) is permanently deleted.
+function DeleteDialog({ filing, onClose, onDone }) {
   const toast = useToast();
-  const input = useRef(null);
-  const [picked, setPicked] = useState(null);
-  const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
-
-  function onPick(e) {
-    const f = e.target.files[0];
-    if (!f) return;
-    const msg = fileProblem(f);
-    setError(msg);
-    setPicked(msg ? null : f);
-    if (msg) e.target.value = '';
-  }
-
+  const [error, setError] = useState('');
   async function confirm() {
-    if (!picked) return;
     setBusy(true); setError('');
-    const body = new FormData();
-    body.append('files', picked);
     try {
-      await api(`/user/files/${file.id}`, { method: 'PUT', body });
-      toast('Document replaced successfully.');
+      await api(`/user/filings/${filing.id}`, { method: 'DELETE' });
+      toast('Filing deleted.');
       onDone();
     } catch (e) { setError(e.message); setBusy(false); }
   }
-
   return (
-    <Modal title="Replace document" onClose={onClose} busy={busy}>
-      <p>Replacing <b>{file.name}</b>. Choose the corrected file ({ALLOWED_EXT.join(', ').toUpperCase()}, up to {MAX_FILE_MB} MB).</p>
-      <input ref={input} type="file" hidden accept={ALLOWED_EXT.map((e) => `.${e}`).join(',')} onChange={onPick} />
-      {picked && (
-        <div className="file-pick"><span>{picked.name}<small>{fmtSize(picked.size)}</small></span></div>
-      )}
+    <Modal title="Delete filing" onClose={onClose} busy={busy}>
+      <p>Delete <b>{filing.name}</b> ({filing.type} · {filing.year})? The filing and all of its uploaded documents will be removed permanently. This cannot be undone.</p>
       {error && <p role="alert" className="alert"><i className="fa-solid fa-circle-exclamation" />{error}</p>}
       <div className="modal-actions">
-        <button className="btn outline sm" onClick={() => input.current.click()} disabled={busy}><i className="fa-solid fa-folder-open" />{picked ? 'Choose another' : 'Choose file'}</button>
         <button className="btn outline sm" onClick={onClose} disabled={busy}>Cancel</button>
-        <button className="btn sm" onClick={confirm} disabled={!picked || busy}>{busy ? 'Uploading…' : 'Confirm & upload'}</button>
+        <button className="btn danger sm" onClick={confirm} disabled={busy}>{busy ? 'Deleting…' : 'Delete'}</button>
       </div>
     </Modal>
   );
@@ -56,43 +35,43 @@ function ReplaceDialog({ file, onClose, onDone }) {
 
 export default function MyFilings() {
   const [refreshKey, setRefreshKey] = useState(0);
-  const [replacing, setReplacing] = useState(null);
+  const [viewing, setViewing] = useState(null);
+  const [deleting, setDeleting] = useState(null);
 
   const columns = [
-    { label: 'Name', sort: 'name', render: (r) => <strong>{r.name}</strong> },
+    { label: 'Name', sort: 'name', render: (r) => <strong><FilingName id={r.id} name={r.name} role="user" /></strong> },
     { label: 'Type', sort: 'type', render: (r) => <span className="chip">{r.type}</span> },
     { label: 'Year', sort: 'year', render: (r) => r.year },
     { label: 'Contact', sort: 'contact', render: (r) => <span className="nowrap">{fmtPhone(r.contact)}</span> },
     { label: 'Status', render: (r) => <StatusBadge status={r.status} /> },
+    { label: 'Final File', render: (r) => <FileLinks files={r.files} empty="—" /> },
     {
-      label: 'Files',
+      // Same rule as before: Pending / In Progress filings are editable, Completed ones are read-only (view only).
+      label: 'Action',
       render: (r) => (
-        <div>
-          <FileLinks files={r.files} />
-          {r.editable && r.files.map((f) => (
-            <button key={f.id} className="link-btn plain" style={{ display: 'block', marginTop: 4 }} onClick={() => setReplacing(f)} title={`Replace ${f.name}`}>
-              <i className="fa-solid fa-pen" /> Replace {f.name.length > 22 ? `${f.name.slice(0, 20)}…` : f.name}
-            </button>
-          ))}
+        <div className="icon-acts">
+          <IconBtn icon="fa-eye" tone="view" label="View filing details" onClick={() => setViewing(r.id)} />
+          {r.editable ? (
+            <>
+              <Link href={`/dashboard/upload?edit=${r.id}`} className="icon-act edit" title="Edit filing" aria-label="Edit filing"><i className="fa-solid fa-pen" /></Link>
+              <IconBtn icon="fa-trash" tone="delete" label="Delete filing" onClick={() => setDeleting(r)} />
+            </>
+          ) : (
+            <span className="muted" title="Completed filings are read-only"><i className="fa-solid fa-lock" /></span>
+          )}
         </div>
       ),
-    },
-    {
-      label: 'Action',
-      render: (r) => r.editable
-        ? <Link href={`/dashboard/upload?edit=${r.id}`} className="btn outline sm"><i className="fa-solid fa-pen-to-square" />Edit Filing</Link>
-        : <span className="muted" title="Completed filings are read-only"><i className="fa-solid fa-lock" /> Read-only</span>,
     },
   ];
 
   return (
     <>
-      <PageHeader title="My Filings" subtitle="Everything you have submitted and where it stands. Pending and in-progress filings can be corrected.">
+      <PageHeader title="My Filings" subtitle="Filings with a payment still pending. Pending and in-progress filings can be corrected; paid filings are listed under Payments.">
         <Link href="/dashboard/upload" className="btn"><i className="fa-solid fa-plus" />New filing</Link>
       </PageHeader>
-      <DataTable endpoint="/user/filings" columns={columns} defaultSort="submitted" emptyIcon="fa-folder-open" emptyText="You have not submitted any filings yet." refreshKey={refreshKey} />
-      <ReferenceCards refreshKey={refreshKey} />
-      {replacing && <ReplaceDialog file={replacing} onClose={() => setReplacing(null)} onDone={() => { setReplacing(null); setRefreshKey((k) => k + 1); }} />}
+      <DataTable endpoint="/user/filings" columns={columns} defaultSort="submitted" emptyIcon="fa-folder-open" emptyText="No filings with a pending payment." refreshKey={refreshKey} />
+      {viewing && <FilingDetails filingId={viewing} role="user" onClose={() => setViewing(null)} />}
+      {deleting && <DeleteDialog filing={deleting} onClose={() => setDeleting(null)} onDone={() => { setDeleting(null); setRefreshKey((k) => k + 1); }} />}
     </>
   );
 }

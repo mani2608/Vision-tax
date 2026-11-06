@@ -1,6 +1,16 @@
 export const FILING_TYPES = ['W2', 'W2G', '1099-B', '1099-DIV', '1099-G', '1099-INT', '1099-MISC', '1099-NEC', '1098', 'K1', 'Other'];
 export const ALLOWED_EXT = ['txt', 'docx', 'pdf', 'rtf', 'xml', 'json', 'csv'];
 export const MAX_FILE_MB = 5;
+// Filing years offered in the dropdown: the API accepts FIRST_FILING_YEAR up to next year. Change the first year here
+// to widen or narrow the list; the list itself always follows the current calendar year.
+export const FIRST_FILING_YEAR = 2000;
+export function filingYears(keep) {
+  const out = [];
+  for (let y = new Date().getFullYear() + 1; y >= FIRST_FILING_YEAR; y--) out.push(String(y));
+  const k = keep && String(keep); // an existing record's year is always selectable, even if outside the range
+  if (k && /^\d{4}$/.test(k) && !out.includes(k)) out.push(k);
+  return out;
+}
 export const MAX_FILES = 10;
 export const STATUS_LABEL = { pending: 'Pending', ongoing: 'In Progress', drafted: 'Drafted', completed: 'Completed' };
 // Mirrors the server's TRANSITIONS table (the server is the authority; this only shapes the UI).

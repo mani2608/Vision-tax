@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import PageHeader from './PageHeader';
 import DataTable from './DataTable';
+import { FilingName } from './FilingDetails';
 import Modal from './Modal';
 import { useToast } from './Shell';
 import { api, fmtDateTime, fmtSize } from '@/lib/api';
@@ -214,7 +215,7 @@ export function ReferenceManager() {
 
   const columns = [
     { label: 'Reference', sort: 'code', render: (r) => <strong>{r.code}</strong> },
-    { label: 'Client', sort: 'client', render: (r) => (r.clientName ? <div className="cell-user"><div><strong>{r.clientName}</strong><span>{r.clientEmail}</span></div></div> : <span className="muted">Not linked (legacy)</span>) },
+    { label: 'Client', sort: 'client', render: (r) => (r.clientName ? <div className="cell-user"><div><strong>{r.filingId ? <FilingName id={r.filingId} name={r.clientName} role="admin" /> : r.clientName}</strong></div></div> : <span className="muted">Not linked (legacy)</span>) },
     { label: 'Filing', sort: 'filing', render: (r) => (r.filingType ? `${r.filingType} · ${r.filingYear} · #${r.filingId}` : '—') },
     { label: 'Amount', sort: 'amount', render: (r) => INR.format(r.amountPaise / 100) },
     { label: 'Status', sort: 'status', render: (r) => <PayBadge status={r.status} /> },
@@ -299,7 +300,7 @@ export function AdminPayments() {
 
   const columns = [
     { label: 'Date', sort: 'date', render: (r) => <span style={{ whiteSpace: 'nowrap' }}>{fmtDateTime(r.paidAt || r.createdAt)}</span> },
-    { label: 'Client', sort: 'client', render: (r) => <div className="cell-user"><div><strong>{r.clientName || '—'}</strong><span>{r.clientEmail}</span></div></div> },
+    { label: 'Client', sort: 'client', render: (r) => <div className="cell-user"><div><strong>{r.clientName ? (r.filingId ? <FilingName id={r.filingId} name={r.clientName} role="admin" /> : r.clientName) : '—'}</strong></div></div> },
     { label: 'Filing', render: (r) => (r.filingType ? `${r.filingType} · ${r.filingYear} · #${r.filingId}` : <span className="muted">{r.plan === 'reference' ? '—' : `Plan: ${r.plan}`}</span>) },
     { label: 'Reference', sort: 'code', render: (r) => (r.reference ? <strong>{r.reference}</strong> : '—') },
     { label: 'Amount', sort: 'amount', render: (r) => INR.format(r.amountPaise / 100) },

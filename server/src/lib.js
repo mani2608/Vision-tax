@@ -31,6 +31,28 @@ async function attachFiles(rows, kinds, conn = pool) {
   return rows.map((r) => ({ ...r, files: byFiling.get(r.id) }));
 }
 
+// Full record of ONE filing for the details popup. `ownerId` (users) restricts the lookup to their own filing;
+// admins pass null. Users never see final copies before the filing is Completed, matching the download rule.
+async function filingDetails(id, ownerId = null) {
+  if (!Number.isInteger(id) || id < 1) return null;
+  const [[f]] = await pool.query(
+    `SELECT f.id, f.name, f.type, f.filing_year AS year, f.contact, f.status, f.submitted_at AS submittedAt, f.updated_at AS updatedAt,
+            f.user_id AS userId, TRIM(CONCAT(u.first_name,' ',u.last_name)) AS userName, u.email AS userEmail, u.phone AS userPhone
+       FROM filings f JOIN users u ON u.id = f.user_id WHERE f.id = ?${ownerId ? ' AND f.user_id = ?' : ''}`,
+    ownerId ? [id, ownerId] : [id]
+  );
+  if (!f) return null;
+  const [files] = await pool.query(
+    `SELECT ff.id, ff.kind, ff.original_name AS name, ff.size_bytes AS size, ff.created_at AS createdAt,
+            TRIM(CONCAT(up.first_name,' ',up.last_name)) AS uploadedBy
+       FROM filing_files ff LEFT JOIN users up ON up.id = ff.uploaded_by WHERE ff.filing_id = ? ORDER BY ff.id`, [id]);
+  const visible = files.filter((x) => !ownerId || x.kind !== 'final' || f.status === 'completed');
+  const [history] = await pool.query(
+    `SELECT h.from_status AS fromStatus, h.to_status AS toStatus, h.note, h.created_at AS at
+       FROM filing_status_history h WHERE h.filing_id = ? ORDER BY h.id`, [id]);
+  return { ...f, editable: USER_EDITABLE.includes(f.status), files: visible, history };
+}
+
 const asyncRoute = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 
 const validators = {
@@ -76,4 +98,4 @@ function validateFilingInput(b = {}, existingContact = null) {
   return { value: { name, type, year, contact: contact.value } };
 }
 
-module.exports = { FILING_TYPES, STATUSES, TRANSITIONS, USER_EDITABLE, listParams, like, attachFiles, asyncRoute, validators, normalizePhone, validateFilingInput };
+module.exports = { filingDetails, FILING_TYPES, STATUSES, TRANSITIONS, USER_EDITABLE, listParams, like, attachFiles, asyncRoute, validators, normalizePhone, validateFilingInput };

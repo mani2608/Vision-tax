@@ -8,7 +8,7 @@ const { requireAuth, requireRole } = require('../middleware/auth');
 const { receiveFiles, removeFiles } = require('../middleware/upload');
 const { newRefCode, effectiveStatusSql, parsePaise } = require('../references');
 const { notifyPaymentSuccess, notifyManualRejected, notifyReferenceCreated } = require('../notifications');
-const { STATUSES, TRANSITIONS, listParams, like, attachFiles, asyncRoute } = require('../lib');
+const { STATUSES, TRANSITIONS, listParams, like, attachFiles, asyncRoute, filingDetails } = require('../lib');
 
 const router = express.Router();
 router.use(requireAuth(), requireRole('admin'));
@@ -78,6 +78,25 @@ router.get('/filings/:id/history', asyncRoute(async (req, res) => {
   res.json({ rows });
 }));
 
+// Full record of one filing (client contact, every document kind, status history) for the details popup.
+router.get('/filings/:id/details', asyncRoute(async (req, res) => {
+  const d = await filingDetails(Number(req.params.id));
+  if (!d) return res.status(404).json({ error: 'Filing not found.' });
+  res.json({ filing: d });
+}));
+
+// Client profile plus all of that client's filings (used when a name is clicked on the All Users page).
+router.get('/users/:id/details', asyncRoute(async (req, res) => {
+  const id = Number(req.params.id);
+  const [[u]] = Number.isInteger(id) && id > 0
+    ? await pool.query("SELECT id, TRIM(CONCAT(first_name,' ',last_name)) AS name, email, phone, created_at AS registeredAt FROM users WHERE id = ? AND role = 'user'", [id])
+    : [[]];
+  if (!u) return res.status(404).json({ error: 'User not found.' });
+  const [filings] = await pool.query(
+    'SELECT id, name, type, filing_year AS year, status, submitted_at AS submittedAt FROM filings WHERE user_id = ? ORDER BY submitted_at DESC, id DESC', [id]);
+  res.json({ user: u, filings });
+}));
+
 async function lockFiling(conn, id) {
   const [[f]] = await conn.query('SELECT id, user_id, status FROM filings WHERE id = ? FOR UPDATE', [id]);
   return f;
@@ -137,6 +156,79 @@ router.post('/filings/:id/final', receiveFiles(ADMIN_UPLOAD), asyncRoute((req, r
     return { status: filing.status };
   })
 ));
+
+// ---- Edit / delete a document the admin uploaded (Draft File or Upload File). Client-uploaded documents are never touched.
+// Same rules as uploading: draft files are frozen once the filing is Completed. The new file is stored first and the old
+// one is unlinked only after the commit, so a failure never leaves the record without a file.
+const STORED_RE = /^[a-f0-9]{32}\.[a-z]{3,4}$/;
+const unlinkStored = (name) => { if (name && STORED_RE.test(name)) fs.unlink(path.join(config.uploadDir, name), () => {}); };
+
+async function lockAdminFile(conn, id) {
+  const [[row]] = Number.isInteger(id) && id > 0
+    ? await conn.query(
+      `SELECT ff.id, ff.filing_id, ff.kind, ff.stored_name, f.status
+         FROM filing_files ff JOIN filings f ON f.id = ff.filing_id
+        WHERE ff.id = ? AND ff.kind IN ('draft','final') FOR UPDATE`, [id])
+    : [[]];
+  if (!row) throw httpError(404, 'Document not found.');
+  if (row.kind === 'draft' && row.status === 'completed') throw httpError(409, 'This filing is already completed, so its draft documents are locked.');
+  return row;
+}
+
+router.put('/files/:id', receiveFiles({ ...ADMIN_UPLOAD, maxCount: 1 }), asyncRoute(async (req, res) => {
+  const files = req.files;
+  const file = files[0];
+  const id = Number(req.params.id);
+  const conn = await pool.getConnection();
+  let oldName = null;
+  try {
+    await conn.beginTransaction();
+    const row = await lockAdminFile(conn, id);
+    oldName = row.stored_name;
+    await conn.query(
+      'UPDATE filing_files SET stored_name = ?, original_name = ?, mime_type = ?, size_bytes = ?, uploaded_by = ?, created_at = NOW() WHERE id = ?',
+      [file.filename, file.originalname.slice(0, 255), file.mimetype, file.size, req.user.id, row.id]);
+    await conn.query('UPDATE filings SET updated_at = NOW() WHERE id = ?', [row.filing_id]);
+    await audit(req.user.id, 'file.admin_replace', 'file', row.id, `filing ${row.filing_id} ${row.kind}`, req.ip, conn);
+    await conn.commit();
+  } catch (e) {
+    await conn.rollback();
+    removeFiles(files);
+    if (e.http) return res.status(e.http).json({ error: e.message });
+    throw e;
+  } finally {
+    conn.release();
+  }
+  unlinkStored(oldName);
+  res.json({ ok: true, message: 'Document replaced.', file: { id, name: file.originalname } });
+}));
+
+router.delete('/files/:id', asyncRoute(async (req, res) => {
+  const id = Number(req.params.id);
+  const conn = await pool.getConnection();
+  let oldName = null;
+  try {
+    await conn.beginTransaction();
+    const row = await lockAdminFile(conn, id);
+    // Do not strip a document the current status depends on.
+    const [[{ n }]] = await conn.query('SELECT COUNT(*) AS n FROM filing_files WHERE filing_id = ? AND kind = ?', [row.filing_id, row.kind]);
+    if (n <= 1 && row.kind === 'final' && row.status === 'completed') throw httpError(409, 'A completed filing must keep its Upload File. Replace it instead.');
+    if (n <= 1 && row.kind === 'draft' && row.status === 'drafted') throw httpError(409, 'A drafted filing must keep its draft document. Replace it instead.');
+    oldName = row.stored_name;
+    await conn.query('DELETE FROM filing_files WHERE id = ?', [row.id]);
+    await conn.query('UPDATE filings SET updated_at = NOW() WHERE id = ?', [row.filing_id]);
+    await audit(req.user.id, 'file.admin_delete', 'file', row.id, `filing ${row.filing_id} ${row.kind}`, req.ip, conn);
+    await conn.commit();
+  } catch (e) {
+    await conn.rollback();
+    if (e.http) return res.status(e.http).json({ error: e.message });
+    throw e;
+  } finally {
+    conn.release();
+  }
+  unlinkStored(oldName);
+  res.json({ ok: true, message: 'Document deleted.' });
+}));
 
 router.patch('/filings/:id/status', asyncRoute((req, res) =>
   withFiling(req, res, async (conn, filing) => {

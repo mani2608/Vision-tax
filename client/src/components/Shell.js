@@ -49,6 +49,8 @@ export default function Shell({ role, children }) {
   const path = usePathname();
   const [user, setUser] = useState(null);
   const [collapsed, setCollapsed] = useState(false);
+  // Laptop-width screens start with the icon-only sidebar so the tables get the room; the toggle still expands it.
+  useEffect(() => { if (window.innerWidth > 900 && window.innerWidth <= 1400) setCollapsed(true); }, []);
   const [open, setOpen] = useState(false);
   const [menu, setMenu] = useState(false);
   const [toasts, setToasts] = useState([]);
@@ -164,8 +166,8 @@ export default function Shell({ role, children }) {
                   {menu && (
                     <div className="menu" role="menu">
                       <div className="menu-head"><strong>{displayName}</strong><span>{user.email}</span></div>
-                      <Link href="/change-password" role="menuitem"><i className="fa-solid fa-key" /> Change password</Link>
                       <a href="/index.html" role="menuitem"><i className="fa-solid fa-house" /> Return to Website</a>
+                      <Link href="/change-password" role="menuitem"><i className="fa-solid fa-key" /> Change password</Link>
                       <button className="danger" onClick={logout} role="menuitem"><i className="fa-solid fa-right-from-bracket" /> Logout</button>
                     </div>
                   )}

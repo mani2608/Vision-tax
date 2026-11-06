@@ -1,6 +1,7 @@
 'use client';
-import { useState } from 'react';
-import DataTable, { FileLinks, UserCell } from './DataTable';
+import { useRef, useState } from 'react';
+import DataTable, { FileLinks, IconBtn, UserCell } from './DataTable';
+import { FilingName } from './FilingDetails';
 import PageHeader from './PageHeader';
 import { api, STATUS_LABEL, fileProblem, fmtSize, ALLOWED_EXT, fmtPhone } from '@/lib/api';
 import { useToast } from './Shell';
@@ -37,24 +38,6 @@ function useRowUpload(filingId, kind, onDone) {
       } catch (e) { toast(`${e.message} Existing documents were kept.`, 'error'); } finally { setBusy(false); }
     },
   };
-}
-
-function ChooseCell({ u }) {
-  return (
-    <div className="uploader">
-      <input key={u.key} type="file" accept={ALLOWED_EXT.map((e) => `.${e}`).join(',')} aria-label="Choose file" onChange={u.pick} disabled={u.busy} />
-      {u.file && <small className="muted uploader-name" title={u.file.name}>{u.file.name} · {fmtSize(u.file.size)}</small>}
-      {u.problem && <small className="uploader-err">{u.problem}</small>}
-    </div>
-  );
-}
-
-function UploadCell({ u, tone = 'cyan' }) {
-  return (
-    <button className={`btn sm ${tone}`} disabled={u.busy || !u.file} onClick={u.send}>
-      <i className="fa-solid fa-cloud-arrow-up" />{u.busy ? 'Uploading…' : 'Upload'}
-    </button>
-  );
 }
 
 // A filing may only move forward once the admin has uploaded the files it needs. (The server enforces this too.)
@@ -120,9 +103,9 @@ function StatusEditor({ row, onDone }) {
       <select className="status-select" value={value} onChange={(e) => setValue(e.target.value)} aria-label="Status" disabled={busy}>
         {STATUS_CHOICES.map(([k, l]) => <option key={k} value={k}>{l}</option>)}
       </select>
-      {blocked && <small className="muted">{blocked}</small>}
+      <button className="btn sm" disabled={busy || Boolean(blocked)} title={blocked || 'Save the selected status'} onClick={save}>{busy ? 'Saving…' : 'Save'}</button>
+      {blocked && <i className="fa-solid fa-circle-info warn-ico" title={blocked} aria-label={blocked} />}
       {asking && <ConfirmStatus row={row} to="completed" onCancel={() => { setAsking(false); setValue(row.status); }} onDone={() => { setAsking(false); onDone(); }} doneMessage="Filing completed. You can now add a payment reference." />}
-      <button className="btn sm" disabled={busy || Boolean(blocked)} title={blocked} onClick={save}>{busy ? 'Saving…' : 'Save Update'}</button>
     </div>
   );
 }
@@ -131,11 +114,11 @@ function StartButton({ row, onDone }) {
   const [asking, setAsking] = useState(false);
   const blocked = blocker(row, 'ongoing');
   return (
-    <>
+    <div className="status-edit">
       <button className="btn sm" disabled={Boolean(blocked)} title={blocked || 'Move this filing to Ongoing'} onClick={() => setAsking(true)}><i className="fa-solid fa-play" />Start Processing</button>
-      {blocked && <small className="muted block-note">{blocked}</small>}
+      {blocked && <i className="fa-solid fa-circle-info warn-ico" title={blocked} aria-label={blocked} />}
       {asking && <ConfirmStatus row={row} to="ongoing" note="Processing started" doneMessage="Filing moved to Ongoing. Your document is now its Draft File." onCancel={() => setAsking(false)} onDone={() => { setAsking(false); onDone(); }} />}
-    </>
+    </div>
   );
 }
 
@@ -202,30 +185,100 @@ function RefCell({ row, onDone }) {
   const refs = row.refs || [];
   const latest = refs[0];
   return (
-    <div className="ref-cell">
-      {latest && <div className="ref-mini"><strong>{latest.code}</strong><PayBadge status={latest.status} /><span className="muted">{money(latest.amountPaise)}</span>{refs.length > 1 && <small className="muted">+{refs.length - 1} earlier</small>}</div>}
-      <button className="btn outline sm" onClick={() => setOpen(true)}><i className="fa-solid fa-file-invoice" />{latest ? 'Manage' : 'Add Payment Reference'}</button>
+    <>
+      <button className="btn outline sm" onClick={() => setOpen(true)} title={latest ? `${latest.code} · ${money(latest.amountPaise)}${refs.length > 1 ? ` (+${refs.length - 1} earlier)` : ''}` : 'Create a payment reference'}>
+        <i className="fa-solid fa-file-invoice" />{latest ? 'Manage' : 'Add Payment'}
+      </button>
+      {latest && <PayBadge status={latest.status} />}
       {open && <ReferenceModal row={row} onClose={() => setOpen(false)} onDone={onDone} />}
-    </div>
+    </>
   );
 }
 
 // ---- Tables ---------------------------------------------------------------------------------------------------
 const only = (files, kind) => (files || []).filter((f) => f.kind === kind);
 const BASE = [
-  { label: 'Client', sort: 'name', render: (r) => <UserCell name={r.userName || r.name} sub={r.userEmail} /> },
+  { label: 'Client', sort: 'name', render: (r) => <UserCell name={r.userName || r.name}><FilingName id={r.id} name={r.userName || r.name} role="admin" /></UserCell> },
   { label: 'Type of Filing', sort: 'type', render: (r) => <span className="chip">{r.type}</span> },
   { label: 'Year', sort: 'year', render: (r) => r.year },
   { label: 'Contact', sort: 'contact', render: (r) => <span className="nowrap">{fmtPhone(r.contact)}</span> },
+  // Two different fields: what the CLIENT uploaded (read-only) and what the ADMIN uploaded (replace / delete icons).
+  { label: 'Client Filing File', render: (r) => <FileLinks files={only(r.files, 'upload')} empty="No file" /> },
 ];
 
-// Each row owns its upload state, so every row's Choose File and Upload buttons work independently.
+// ---- Admin-uploaded documents: pen = replace with a new file, cross = delete (with confirmation) ----------------------
+// Only draft/final files (uploaded by the admin) get these icons; the client's own uploads are never editable here.
+// Draft files are locked once a filing is Completed (the server enforces the same rule).
+function AdminFiles({ row, kinds, refresh, empty }) {
+  const toast = useToast();
+  const input = useRef(null);
+  const [target, setTarget] = useState(null); // file being replaced
+  const [deleting, setDeleting] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const files = (row.files || []).filter((f) => kinds.includes(f.kind));
+  const tagged = kinds.length > 1;
+  const locked = (f) => f.kind === 'draft' && row.status === 'completed';
+
+  async function onPick(e) {
+    const f = e.target.files[0];
+    e.target.value = '';
+    const t = target;
+    setTarget(null);
+    if (!f || !t) return;
+    const p = fileProblem(f);
+    if (p) return toast(p, 'error');
+    setBusy(true);
+    const body = new FormData();
+    body.append('files', f);
+    try {
+      await api(`/admin/files/${t.id}`, { method: 'PUT', body });
+      toast(`"${t.name}" replaced with "${f.name}".`);
+      refresh();
+    } catch (err) { toast(`${err.message} The existing document was kept.`, 'error'); } finally { setBusy(false); }
+  }
+
+  async function confirmDelete() {
+    setBusy(true);
+    try {
+      await api(`/admin/files/${deleting.id}`, { method: 'DELETE' });
+      toast(`"${deleting.name}" deleted.`);
+      setDeleting(null); refresh();
+    } catch (err) { toast(err.message, 'error'); setDeleting(null); } finally { setBusy(false); }
+  }
+
+  return (
+    <>
+      <FileLinks files={files} empty={empty} actions={(f) => (locked(f) ? <i className="fa-solid fa-lock warn-ico" title="Draft documents are locked once the filing is completed" /> : (
+        <>
+          <IconBtn icon="fa-pen" tone="edit" label={`Replace ${f.name}`} disabled={busy} onClick={() => { setTarget(f); input.current.click(); }} />
+          <IconBtn icon="fa-xmark" tone="delete" label={`Delete ${f.name}`} disabled={busy} onClick={() => setDeleting(f)} />
+        </>
+      ))} tag={tagged ? (f) => (f.kind === 'draft' ? 'Draft' : 'Final') : null} />
+      <input ref={input} type="file" hidden accept={ALLOWED_EXT.map((e) => `.${e}`).join(',')} onChange={onPick} />
+      {deleting && (
+        <Modal title="Delete document" onClose={() => setDeleting(null)} busy={busy}>
+          <p>Delete <b>{deleting.name}</b> from <b>{row.userName || row.name}</b>'s filing? Only this document is removed; the filing's other documents are not affected.</p>
+          <div className="modal-actions">
+            <button className="btn outline sm" onClick={() => setDeleting(null)} disabled={busy}>Cancel</button>
+            <button className="btn danger sm" onClick={confirmDelete} disabled={busy}>{busy ? 'Deleting…' : 'Delete'}</button>
+          </div>
+        </Modal>
+      )}
+    </>
+  );
+}
+
+// Each row owns its upload state, so every row's Choose and Upload controls work independently. One compact line per row.
 function UploadPair({ row, kind, refresh, tone }) {
   const u = useRowUpload(row.id, kind, refresh);
   return (
-    <div className="upload-pair">
-      <ChooseCell u={u} />
-      <UploadCell u={u} tone={tone} />
+    <div className="mini-up">
+      <label className={`mini-btn${u.busy ? ' off' : ''}`} title="Choose a file to upload"><i className="fa-solid fa-folder-open" />Choose
+        <input key={u.key} type="file" hidden accept={ALLOWED_EXT.map((e) => `.${e}`).join(',')} aria-label="Choose file" onChange={u.pick} disabled={u.busy} />
+      </label>
+      <button className={`mini-btn go ${tone}`} disabled={u.busy || !u.file} onClick={u.send} title="Upload the chosen file"><i className="fa-solid fa-cloud-arrow-up" />{u.busy ? '…' : 'Upload'}</button>
+      {u.file && <small className="mini-note" title={`${u.file.name} · ${fmtSize(u.file.size)}`}>{u.file.name}</small>}
+      {u.problem && <small className="uploader-err">{u.problem}</small>}
     </div>
   );
 }
@@ -237,22 +290,19 @@ const VARIANTS = {
     icon: 'fa-clock',
     columns: (refresh) => [
       ...BASE,
-      { label: 'File', render: (r) => <FileLinks files={only(r.files, 'upload')} empty="No file" /> },
-      { label: 'Admin Document', render: (r) => <FileLinks files={only(r.files, 'draft')} empty="Not uploaded" /> },
-      { label: 'Choose & Upload', render: (r) => <UploadPair row={r} kind="draft" refresh={refresh} tone="cyan" /> },
+      { label: 'Admin Uploaded Filing', render: (r) => <AdminFiles row={r} kinds={['draft']} refresh={refresh} empty="Not uploaded" /> },
+      { label: 'Choose File & Upload', render: (r) => <UploadPair row={r} kind="draft" refresh={refresh} tone="cyan" /> },
       { label: 'Action', render: (r) => <StartButton row={r} onDone={refresh} /> },
     ],
   },
   ongoing: {
     title: 'Ongoing Filings',
-    subtitle: 'Filings in progress. Uploading a file never changes the status; pick a status and press Save Update.',
+    subtitle: 'Filings in progress. Uploading a file never changes the status; pick a status and press Save.',
     icon: 'fa-hourglass-half',
     columns: (refresh) => [
       ...BASE,
-      { label: 'Draft File', render: (r) => <FileLinks files={only(r.files, 'draft')} empty="No draft" /> },
-      { label: 'Upload File', render: (r) => <FileLinks files={only(r.files, 'final')} empty="Not uploaded" /> },
-      { label: 'Choose & Upload', render: (r) => <UploadPair row={r} kind="final" refresh={refresh} tone="cyan" /> },
-      { label: 'Status', render: (r) => <PayStatus row={r} /> },
+      { label: 'Admin Uploaded Filing', render: (r) => <AdminFiles row={r} kinds={['draft', 'final']} refresh={refresh} empty="Not uploaded" /> },
+      { label: 'Choose File & Upload', render: (r) => <UploadPair row={r} kind="final" refresh={refresh} tone="cyan" /> },
       { label: 'Action', render: (r) => <StatusEditor row={r} onDone={refresh} /> },
     ],
   },
@@ -262,11 +312,9 @@ const VARIANTS = {
     icon: 'fa-circle-check',
     columns: (refresh) => [
       ...BASE,
-      { label: 'Draft File', render: (r) => <FileLinks files={only(r.files, 'draft')} empty="No draft" /> },
-      { label: 'Upload File', render: (r) => <FileLinks files={only(r.files, 'final')} empty="None" /> },
-      { label: 'Choose & Upload', render: (r) => <UploadPair row={r} kind="final" refresh={refresh} tone="green" /> },
-      { label: 'Status', render: () => <CompleteBadge /> },
-      { label: 'Payment', render: (r) => <RefCell row={r} onDone={refresh} /> },
+      { label: 'Admin Uploaded Filing', render: (r) => <AdminFiles row={r} kinds={['draft', 'final']} refresh={refresh} empty="Not uploaded" /> },
+      { label: 'Choose File & Upload', render: (r) => <UploadPair row={r} kind="final" refresh={refresh} tone="green" /> },
+      { label: 'Action', render: (r) => <div className="status-edit"><CompleteBadge /><RefCell row={r} onDone={refresh} /></div> },
     ],
   },
 };

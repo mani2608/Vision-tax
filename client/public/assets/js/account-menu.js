@@ -112,7 +112,7 @@
     var panel = el('div', { class: 'am-panel', role: 'menu' }, [
       el('div', { class: 'am-head' }, [el('span', { class: 'am-avatar am-avatar-lg', 'aria-hidden': 'true', text: initials(user.name) }),
         el('div', { class: 'am-head-text' }, [el('strong', { text: user.name }), el('span', { text: user.email })])]),
-      el('div', { class: 'am-sep' }), changePw, dashBtn, el('div', { class: 'am-sep' }), out,
+      el('div', { class: 'am-sep' }), dashBtn, changePw, el('div', { class: 'am-sep' }), out,
     ]);
     var wrap = el('div', { class: 'am-wrap', 'data-role': user.role }, [trigger, panel]);
 
