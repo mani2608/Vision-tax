@@ -49,8 +49,6 @@ export default function Shell({ role, children }) {
   const path = usePathname();
   const [user, setUser] = useState(null);
   const [collapsed, setCollapsed] = useState(false);
-  // Laptop-width screens start with the icon-only sidebar so the tables get the room; the toggle still expands it.
-  useEffect(() => { if (window.innerWidth > 900 && window.innerWidth <= 1400) setCollapsed(true); }, []);
   const [open, setOpen] = useState(false);
   const [menu, setMenu] = useState(false);
   const [toasts, setToasts] = useState([]);

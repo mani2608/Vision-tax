@@ -72,12 +72,6 @@ export default function DataTable({ endpoint, params = {}, columns, defaultSort,
 
   return (
     <div className="card" ref={cardRef}>
-      {topSearch && (
-        <div className="top-wrap">
-          <i className="fa-solid fa-magnifying-glass" aria-hidden />
-          <input className="top-search" placeholder={topSearch} value={name} onChange={(e) => setName(e.target.value)} aria-label={topSearch} />
-        </div>
-      )}
       <div className="table-tools">
         <label>Show
           <select value={limit} onChange={(e) => { setLimit(Number(e.target.value)); setPage(1); }}>
@@ -92,9 +86,11 @@ export default function DataTable({ endpoint, params = {}, columns, defaultSort,
               .map((o) => <option key={o.label} value={`${o.sort}|${o.dir}`}>{o.label}</option>)}
           </select>
         </label>
+        {/* one search box per table (the name search and the general search query the same fields on the server) */}
         <label className="searchbox">
-          <i className="fa-solid fa-magnifying-glass" aria-hidden />
-          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search…" aria-label="Search" />
+          {topSearch
+            ? <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Search" aria-label={topSearch} />
+            : <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search" aria-label="Search" />}
         </label>
       </div>
       <div className="table-wrap" style={{ opacity: state === 'refreshing' ? 0.6 : 1 }}>
@@ -168,10 +164,10 @@ const fileIcon = (n = '') => {
 export function FileLinks({ files, empty = 'No files', actions, tag }) {
   if (!files || files.length === 0) return <span className="muted">{empty}</span>;
   return (
-    <ul className="file-list">
+    <ul className={`file-list${files.length > 1 ? ' multi' : ''}`}>
       {files.map((f) => (
         <li key={f.id}>
-          {tag && <span className={`ftag ${tag(f).toLowerCase()}`}>{tag(f)}</span>}
+          {tag && <span className={`ftag ${tag(f).toLowerCase()}`} title={`${tag(f)} document`}>{tag(f)[0]}</span>}
           <a href={downloadUrl(f.id)} title={f.name}><i className={`fa-solid ${fileIcon(f.name)}`} /><span>{f.name}</span></a>
           {actions && <span className="file-actions">{actions(f)}</span>}
         </li>

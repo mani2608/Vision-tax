@@ -122,7 +122,7 @@ function StartButton({ row, onDone }) {
   );
 }
 
-const CompleteBadge = () => <span className="badge pay-paid" title="Completed is a final status"><i className="fa-solid fa-lock" /> Complete</span>;
+const CompleteBadge = () => <span className="badge pay-paid" title="Completed is a final status (locked)" aria-label="Completed"><i className="fa-solid fa-lock" /></span>;
 
 // ---- Payment references for a Completed filing (reuses the existing /admin/payment-references API) -----------
 function ReferenceModal({ row, onClose, onDone }) {
@@ -187,7 +187,7 @@ function RefCell({ row, onDone }) {
   return (
     <>
       <button className="btn outline sm" onClick={() => setOpen(true)} title={latest ? `${latest.code} · ${money(latest.amountPaise)}${refs.length > 1 ? ` (+${refs.length - 1} earlier)` : ''}` : 'Create a payment reference'}>
-        <i className="fa-solid fa-file-invoice" />{latest ? 'Manage' : 'Add Payment'}
+        <i className="fa-solid fa-file-invoice" /><span className="lbl">{latest ? 'Manage' : 'Add Payment'}</span>
       </button>
       {latest && <PayBadge status={latest.status} />}
       {open && <ReferenceModal row={row} onClose={() => setOpen(false)} onDone={onDone} />}
@@ -246,14 +246,18 @@ function AdminFiles({ row, kinds, refresh, empty }) {
     } catch (err) { toast(err.message, 'error'); setDeleting(null); } finally { setBusy(false); }
   }
 
+  const actionsFn = (f) => (locked(f) ? <i className="fa-solid fa-lock warn-ico" title="Draft documents are locked once the filing is completed" /> : (
+    <>
+      <IconBtn icon="fa-pen" tone="edit" label={`Replace ${f.name}`} disabled={busy} onClick={() => { setTarget(f); input.current.click(); }} />
+      <IconBtn icon="fa-xmark" tone="delete" label={`Delete ${f.name}`} disabled={busy} onClick={() => setDeleting(f)} />
+    </>
+  ));
+  const tagFn = tagged ? (f) => (f.kind === 'draft' ? 'Draft' : 'Final') : null;
+
   return (
     <>
-      <FileLinks files={files} empty={empty} actions={(f) => (locked(f) ? <i className="fa-solid fa-lock warn-ico" title="Draft documents are locked once the filing is completed" /> : (
-        <>
-          <IconBtn icon="fa-pen" tone="edit" label={`Replace ${f.name}`} disabled={busy} onClick={() => { setTarget(f); input.current.click(); }} />
-          <IconBtn icon="fa-xmark" tone="delete" label={`Delete ${f.name}`} disabled={busy} onClick={() => setDeleting(f)} />
-        </>
-      ))} tag={tagged ? (f) => (f.kind === 'draft' ? 'Draft' : 'Final') : null} />
+      {/* every document on its own line (file 1, file 2 …), each with its own replace / delete icons */}
+      <FileLinks files={files} empty={empty} actions={actionsFn} tag={tagFn} />
       <input ref={input} type="file" hidden accept={ALLOWED_EXT.map((e) => `.${e}`).join(',')} onChange={onPick} />
       {deleting && (
         <Modal title="Delete document" onClose={() => setDeleting(null)} busy={busy}>
@@ -273,12 +277,10 @@ function UploadPair({ row, kind, refresh, tone }) {
   const u = useRowUpload(row.id, kind, refresh);
   return (
     <div className="mini-up">
-      <label className={`mini-btn${u.busy ? ' off' : ''}`} title="Choose a file to upload"><i className="fa-solid fa-folder-open" />Choose
+      <label className={`mini-btn${u.busy ? ' off' : ''}`} title={u.file ? `${u.file.name} · ${fmtSize(u.file.size)}` : 'Choose a file to upload'}><i className="fa-solid fa-folder-open" /><span className="mini-name lbl-c">{u.file ? u.file.name : 'Choose'}</span>
         <input key={u.key} type="file" hidden accept={ALLOWED_EXT.map((e) => `.${e}`).join(',')} aria-label="Choose file" onChange={u.pick} disabled={u.busy} />
       </label>
-      <button className={`mini-btn go ${tone}`} disabled={u.busy || !u.file} onClick={u.send} title="Upload the chosen file"><i className="fa-solid fa-cloud-arrow-up" />{u.busy ? '…' : 'Upload'}</button>
-      {u.file && <small className="mini-note" title={`${u.file.name} · ${fmtSize(u.file.size)}`}>{u.file.name}</small>}
-      {u.problem && <small className="uploader-err">{u.problem}</small>}
+      <button className={`mini-btn go ${tone}`} disabled={u.busy || !u.file} onClick={u.send} title="Upload the chosen file"><i className="fa-solid fa-cloud-arrow-up" /><span className="lbl">{u.busy ? '…' : 'Upload'}</span></button>
     </div>
   );
 }

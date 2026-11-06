@@ -596,3 +596,208 @@ table.dt .file-list a { max-width: 98px; }
 @media (max-width: 1100px) { .dash-grid { grid-template-columns: minmax(0, 1fr); } }
 @media (max-width: 900px) { .content { padding: 14px 12px 30px; } .header { padding: 0 12px; } }
 .card[data-stk] table.dt .status-edit, .card[data-stk] table.dt .mini-up { flex-wrap: wrap; }
+
+/* ===== Admin filing tables (Pending / Ongoing / Completed): exactly ONE row per filing =====
+   All three use the same DataTable "compact" table, so these rules apply to all of them. Cells never wrap: long values are
+   truncated with an ellipsis (full text on hover) and the multi-item cells are laid out in a single line with fixed widths. */
+:root { --sidebar-w: 208px; }
+.content { padding-left: 14px; padding-right: 14px; }
+table.dt.compact td { white-space: nowrap; }
+table.dt.compact .file-list { flex-direction: row; flex-wrap: nowrap; gap: 5px; align-items: center; }
+table.dt.compact .file-list li { flex: 0 1 auto; min-width: 0; gap: 3px; }
+table.dt.compact td[data-label="Client Filing File"] .file-list { width: 112px; }
+table.dt.compact td[data-label="Admin Uploaded Filing"] .file-list { width: 226px; }
+table.dt.compact .file-list a { max-width: 100%; min-width: 0; padding: 2px 6px; flex: 0 1 auto; }
+table.dt.compact .file-list li > .file-actions { gap: 2px; }
+table.dt.compact .file-actions .icon-act { width: 20px; height: 20px; font-size: .58rem; border-radius: 5px; }
+table.dt.compact .ftag { padding: 1px 4px; font-size: .56rem; }
+.mini-up { flex-wrap: nowrap; }
+.mini-name { display: inline-block; max-width: 64px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.card[data-stk] table.dt.compact td { white-space: normal; }
+.card[data-stk] table.dt.compact .file-list { width: auto !important; flex-wrap: wrap; }
+.card[data-stk] table.dt .mini-up { flex-wrap: wrap; }
+.card[data-stk] table.dt .mini-name { max-width: 100%; }
+table.dt.compact td[data-label="Client Filing File"] .file-list { width: 116px; }
+table.dt.compact td[data-label="Admin Uploaded Filing"] .af-line { display: flex; align-items: center; gap: 4px; width: 250px; }
+table.dt.compact td[data-label="Admin Uploaded Filing"] .file-list { flex: 1 1 0; width: auto; min-width: 0; }
+.mini-btn.more { padding: 2px 6px; font-size: .68rem; flex-shrink: 0; }
+.af-line { min-width: 0; }
+table.dt.compact .file-list a > i { display: none; }
+.card[data-stk] table.dt.compact .file-list a > i { display: inline; }
+.card[data-stk] table.dt.compact td .af-line { width: auto; flex-wrap: wrap; }
+
+/* extra squeeze so all nine columns fit laptop widths even with payment badges and long names */
+table.dt.compact th, table.dt.compact td { padding-left: 5px; padding-right: 5px; }
+table.dt.compact th:first-child, table.dt.compact td:first-child { padding-left: 8px; padding-right: 2px; }
+table.dt.compact .name-link { max-width: 118px; }
+table.dt.compact td[data-label="Client Filing File"] .file-list { width: 104px; }
+table.dt.compact td[data-label="Admin Uploaded Filing"] .af-line { width: 232px; }
+table.dt.compact .mini-btn { padding: 3px 6px; gap: 4px; }
+.mini-up { gap: 3px; }
+.mini-name { max-width: 56px; }
+table.dt.compact .status-edit { gap: 4px; }
+table.dt.compact .status-edit .badge { padding: 3px 6px; }
+table.dt.compact .status-edit .btn.sm { padding: 4px 7px; }
+
+/* search boxes: plain "Search" placeholder, no icon */
+.top-search { padding-left: 12px; }
+.searchbox input { padding-left: 10px; }
+
+/* ===== v5: single-row admin tables with the sidebar OPEN on laptops (>=1200px) =====
+   Tighter sidebar and page padding, icon-only Choose/Upload/Manage buttons (full text in the tooltip), narrower columns. */
+@media (min-width: 901px) and (max-width: 1600px) {
+  table.dt.compact th, table.dt.compact td { padding-left: 4px; padding-right: 4px; font-size: .76rem; }
+  table.dt.compact th { font-size: .62rem; }
+  table.dt.compact th:first-child, table.dt.compact td:first-child { padding-left: 6px; padding-right: 0; width: 1%; }
+  table.dt.compact .name-link { max-width: 104px; }
+  table.dt.compact .chip { padding: 1px 5px; font-size: .68rem; }
+  table.dt.compact td[data-label="Client Filing File"] .file-list { width: 92px; }
+  table.dt.compact td[data-label="Admin Uploaded Filing"] .af-line { width: 196px; }
+  table.dt.compact .file-list a { font-size: .7rem; padding: 2px 5px; }
+  table.dt.compact .card .lbl, .card:not([data-stk]) table.dt.compact .lbl { display: none; }
+  .card:not([data-stk]) table.dt.compact .mini-name:not(.lbl) , .card:not([data-stk]) table.dt.compact .lbl-c { display: none; }
+  .card:not([data-stk]) table.dt.compact .mini-btn { padding: 4px 6px; }
+  .card:not([data-stk]) table.dt.compact .btn.sm { padding: 4px 7px; }
+  .card:not([data-stk]) table.dt.compact .status-select { max-width: 78px; }
+}
+
+/* ===== v6: several files in one cell are stacked one below another (file 1, file 2 …); the row stays ONE table row ===== */
+table.dt .file-list, table.dt.compact .file-list { display: flex; flex-direction: column; flex-wrap: nowrap; align-items: stretch; gap: 4px; }
+table.dt.compact td[data-label="Client Filing File"] .file-list { width: 118px; }
+table.dt.compact td[data-label="Admin Uploaded Filing"] .file-list { width: 206px; flex: none; }
+table.dt.compact td[data-label="Admin Uploaded Filing"] .af-line { width: auto; }
+table.dt .file-list li { display: flex; flex-wrap: nowrap; align-items: center; gap: 4px; min-width: 0; }
+table.dt .file-list li > a { flex: 1 1 0; min-width: 0; max-width: none; }
+table.dt .file-list li > .file-actions { flex: none; }
+table.dt.compact td { vertical-align: middle; }
+table.dt.compact tbody tr td { padding-top: 6px; padding-bottom: 6px; }
+@media (min-width: 901px) and (max-width: 1600px) {
+  table.dt.compact td[data-label="Client Filing File"] .file-list { width: 112px; }
+  table.dt.compact td[data-label="Admin Uploaded Filing"] .file-list { width: 190px; }
+}
+.card[data-stk] table.dt .file-list { width: auto !important; max-width: 360px; }
+
+/* ===== v7: roomier admin rows — bigger Choose/Upload icons, space between stacked files, clear separation between clients ===== */
+table.dt.compact tbody tr td { padding-top: 14px; padding-bottom: 14px; }
+table.dt.compact tbody tr td { border-bottom: 1px solid color-mix(in srgb, var(--primary-400) 35%, var(--border)); }
+table.dt.compact tbody tr:nth-child(even) td { background: var(--surface-2); }
+table.dt.compact tbody tr:hover td { background: var(--row-hover); }
+table.dt.compact .file-list { gap: 10px; }
+table.dt.compact .mini-up { gap: 6px; }
+table.dt.compact .mini-btn { font-size: .8rem; padding: 7px 10px; border-radius: 9px; }
+table.dt.compact .mini-btn i { font-size: 1.05rem; }
+.card:not([data-stk]) table.dt.compact .mini-btn { padding: 7px 10px; }
+.card[data-stk] table.dt.compact tbody tr { border-bottom: 2px solid color-mix(in srgb, var(--primary-400) 35%, var(--border)); }
+
+/* =====================================================================================================================
+   v8 DESIGN REFRESH — sidebar, header, page title, cards, toolbar, tables (admin + client dashboards)
+   Purely visual: same markup/behaviour. Light + dark themes use the existing colour variables.
+   ===================================================================================================================== */
+:root { --sidebar-w: 232px; --sidebar-w-collapsed: 72px; --header-h: 60px; --radius: 14px; }
+@media (min-width: 901px) and (max-width: 1439px) { :root { --sidebar-w: 212px; } }
+
+/* ---- sidebar ---- */
+.sidebar { box-shadow: 4px 0 24px rgba(20, 12, 70, .18); }
+.sidebar-top { height: var(--header-h); padding: 0 14px 0 16px; border-bottom: 1px solid var(--sb-border); }
+.brand { gap: 9px; }
+.brand img { width: 34px; height: 34px; border-radius: 9px; background: #fff; padding: 3px; }
+.brand span { font-size: 1.15rem; }
+.collapse-btn { width: 30px; height: 30px; border-radius: 8px; color: var(--sb-text); background: rgba(255, 255, 255, .07); font-size: .8rem; }
+.collapse-btn:hover { background: rgba(255, 255, 255, .16); color: #fff; }
+.nav { padding: 12px 12px 8px; }
+.nav-label { padding: 14px 10px 6px; font-size: .64rem; letter-spacing: .14em; }
+.nav-label:first-child { padding-top: 4px; }
+.nav-item { gap: 11px; padding: 8px 10px; margin: 3px 0; border-radius: 11px; font-size: .86rem; font-weight: 500; color: var(--sb-text); }
+.nav-item span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.nav-item i { width: 32px; height: 32px; border-radius: 9px; font-size: .85rem; background: rgba(255, 255, 255, .08); }
+.nav-item:hover { background: rgba(255, 255, 255, .09); }
+.nav-item:hover i { background: rgba(255, 255, 255, .14); }
+.nav-item.active { background: linear-gradient(90deg, rgba(139, 92, 246, .55), rgba(139, 92, 246, .16)); box-shadow: inset 0 0 0 1px rgba(167, 139, 250, .4); font-weight: 600; }
+.nav-item.active i { background: linear-gradient(135deg, #8b5cf6, #6d28d9); color: #fff; box-shadow: 0 6px 14px rgba(109, 40, 217, .45); }
+.nav-item.active::after { right: -12px; top: 20%; bottom: 20%; width: 4px; }
+.nav-item.logout:hover { background: rgba(248, 113, 113, .16); color: #fecaca; }
+.sidebar-foot { padding: 12px; }
+.help-card { padding: 12px 14px; border-radius: 13px; font-size: .78rem; line-height: 1.45; background: linear-gradient(135deg, rgba(255, 255, 255, .1), rgba(255, 255, 255, .04)); }
+.help-card strong { font-size: .86rem; }
+.shell.collapsed .nav-item { padding: 6px 0; }
+.shell.collapsed .nav-label { display: none; }
+.shell.collapsed .sidebar-foot { display: none; }
+
+/* ---- header ---- */
+.header { height: var(--header-h); padding: 0 22px; background: color-mix(in srgb, var(--surface) 92%, transparent); box-shadow: 0 1px 0 var(--border), 0 6px 18px rgba(60, 40, 130, .04); }
+.crumbs { font-size: .84rem; }
+.crumbs b { font-size: .92rem; }
+.header-actions { gap: 8px; }
+.profile { padding: 4px 10px 4px 4px; border-radius: 999px; }
+.avatar { width: 34px; height: 34px; font-size: .74rem; }
+.profile .who { font-size: .84rem; line-height: 1.2; }
+
+/* ---- page ---- */
+.content { padding: 22px 22px 40px; }
+.page-head { margin-bottom: 16px; padding-bottom: 14px; border-bottom: 1px solid var(--border); align-items: center; }
+.page-title { font-size: 1.5rem; letter-spacing: -.03em; }
+.page-sub { font-size: .86rem; margin-top: 3px; max-width: 900px; }
+
+/* ---- card + toolbar ---- */
+.card { padding: 16px 18px; border-radius: 16px; box-shadow: 0 1px 2px rgba(27, 31, 51, .04), 0 10px 30px rgba(60, 40, 130, .06); }
+.table-tools { margin-bottom: 14px; padding-bottom: 14px; border-bottom: 1px dashed var(--border); gap: 10px 14px; font-size: .84rem; }
+.table-tools select { padding: 6px 28px 6px 10px; border-radius: 9px; background-color: var(--input-bg); }
+.searchbox { margin-left: auto; }
+.searchbox input { width: 300px; padding: 8px 14px; border-radius: 10px; background: var(--surface-2); font-size: .86rem; }
+.searchbox input:focus { background: var(--input-bg); }
+
+/* ---- tables ---- */
+.table-wrap { border: 1px solid var(--border); border-radius: 12px; background: var(--surface); }
+table.dt { font-size: .82rem; }
+table.dt thead th { background: color-mix(in srgb, var(--primary-soft) 70%, var(--surface)); color: var(--text-2); font-size: .66rem; font-weight: 800; letter-spacing: .06em; padding: 11px 8px; border-bottom: 1px solid var(--border); }
+table.dt thead th:first-child { border-top-left-radius: 11px; }
+table.dt thead th:last-child { border-top-right-radius: 11px; }
+table.dt thead th.sortable:hover { color: var(--primary-600); }
+table.dt thead th:first-child, table.dt tbody td:first-child { white-space: nowrap; }
+table.dt td { padding: 11px 8px; border-bottom: 1px solid var(--border); }
+table.dt td.sno { color: var(--muted); font-weight: 700; text-align: center; }
+table.dt tbody tr:nth-child(even) td { background: color-mix(in srgb, var(--surface-2) 60%, var(--surface)); }
+table.dt tbody tr:hover td { background: var(--row-hover); }
+table.dt.compact thead th, table.dt.compact tbody td { padding-left: 6px; padding-right: 6px; }
+table.dt.compact tbody td { padding-top: 13px; padding-bottom: 13px; border-bottom: 1px solid color-mix(in srgb, var(--primary-400) 28%, var(--border)); }
+table.dt.compact tbody tr:nth-child(even) td { background: color-mix(in srgb, var(--surface-2) 60%, var(--surface)); }
+table.dt.compact tbody tr:hover td { background: var(--row-hover); }
+table.dt .name-link { font-weight: 700; color: var(--text); }
+table.dt .chip { font-size: .72rem; padding: 3px 9px; border-radius: 7px; }
+table.dt .badge { font-size: .7rem; padding: 4px 10px; }
+table.dt .file-list a { background: var(--surface); border-color: var(--border); border-radius: 8px; font-size: .74rem; padding: 3px 8px; }
+table.dt .file-list a:hover { background: var(--primary-soft); }
+.icon-act { border-radius: 8px; background: var(--surface); }
+table.dt .icon-act { width: 28px; height: 28px; }
+table.dt .file-actions .icon-act { width: 24px; height: 24px; font-size: .68rem; }
+table.dt.compact .mini-btn { padding: 6px 9px; border-radius: 9px; background: var(--surface); border-color: var(--input-border); box-shadow: var(--shadow-sm); }
+.card:not([data-stk]) table.dt.compact .mini-btn { padding: 6px 9px; }
+table.dt.compact .mini-btn i { font-size: 1rem; }
+table.dt.compact .mini-btn.go { background: linear-gradient(135deg, #06b6d4, #0284c7); border: 0; }
+table.dt.compact .mini-btn.go.green { background: linear-gradient(135deg, #10b981, #059669); }
+.table-foot { margin-top: 14px; padding-top: 2px; font-size: .82rem; }
+.pager button { border-radius: 9px; }
+.pager button.on { background: linear-gradient(135deg, var(--primary-600), #9333ea); border-color: transparent; color: #fff; box-shadow: 0 6px 14px rgba(124, 58, 237, .3); }
+
+/* ---- stat cards on the dashboard home ---- */
+.stat { border-radius: 16px; padding: 16px 18px; }
+.hero { border-radius: 18px; padding: 22px 26px; }
+
+@media (max-width: 900px) {
+  .content { padding: 14px 12px 30px; }
+  .header { padding: 0 12px; }
+  .searchbox { margin-left: 0; width: 100%; }
+  .searchbox input { width: 100%; }
+}
+@media (min-width: 901px) and (max-width: 1439px) {
+  :root { --sidebar-w: 224px; }
+  .nav-item { font-size: .8rem; gap: 9px; padding: 8px 8px; }
+  .nav-item i { width: 30px; height: 30px; }
+  .content { padding: 18px 14px 36px; }
+  .card { padding: 14px 12px; }
+}
+.shell:not(.collapsed) .nav-item span { white-space: normal; line-height: 1.2; overflow: visible; }
+table.dt.compact .name-link { max-width: 124px; }
+.card[data-stk] table.dt .file-list { max-width: 100% !important; min-width: 0; }
+.card[data-stk] table.dt .file-list li { max-width: 100%; }
+.card[data-stk] table.dt .file-list li > a { flex: 1 1 0; min-width: 0; }
