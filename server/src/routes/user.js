@@ -71,9 +71,9 @@ async function filingList(req, res, { extraWhere, kinds }) {
 const UNPAID_SQL = ` AND NOT EXISTS (SELECT 1 FROM payments pm WHERE pm.filing_id = f.id AND pm.status = 'successful')
   AND NOT EXISTS (SELECT 1 FROM payment_references pr WHERE pr.filing_id = f.id AND pr.status = 'paid')`;
 router.get('/filings', asyncRoute(async (req, res) => {
-  try { await filingList(req, res, { extraWhere: UNPAID_SQL, kinds: ['final'] }); } catch (e) {
+  try { await filingList(req, res, { extraWhere: UNPAID_SQL, kinds: ['upload', 'final'] }); } catch (e) {
     // payments not migrated yet: nothing can be paid, so every filing is unpaid
-    if (/ER_NO_SUCH_TABLE|ER_BAD_FIELD_ERROR/.test(e.code || '') && !res.headersSent) return filingList(req, res, { extraWhere: '', kinds: ['final'] });
+    if (/ER_NO_SUCH_TABLE|ER_BAD_FIELD_ERROR/.test(e.code || '') && !res.headersSent) return filingList(req, res, { extraWhere: '', kinds: ['upload', 'final'] });
     throw e;
   }
 }));

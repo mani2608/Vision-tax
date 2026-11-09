@@ -83,18 +83,24 @@ function UploadFiling() {
   }
   const docChanges = docs.filter((d) => d.removed || d.replacement);
 
-  const onPick = (e) => setFiles(Array.from(e.target.files));
-  const onDrop = (e) => {
-    e.preventDefault(); setOver(false);
-    input.current.files = e.dataTransfer.files;
-    setFiles(Array.from(e.dataTransfer.files));
-  };
-  const remove = (idx) => {
-    const dt = new DataTransfer();
-    files.forEach((f, i) => i !== idx && dt.items.add(f));
-    input.current.files = dt.files;
-    setFiles(Array.from(dt.files));
-  };
+  // New files are ADDED to the current selection (never replace it). Each one is checked against the type / size rules;
+  // invalid, duplicate or over-limit files are skipped with a message and the valid ones are kept.
+  function addFiles(picked) {
+    const issues = [];
+    const next = [...files];
+    for (const f of picked) {
+      const p = fileProblem(f);
+      if (p) { issues.push(p); continue; }
+      if (next.some((x) => x.name === f.name && x.size === f.size && x.lastModified === f.lastModified)) { issues.push(`"${f.name}" is already selected.`); continue; }
+      if (next.length >= MAX_FILES) { issues.push(`You can upload up to ${MAX_FILES} files per filing.`); break; }
+      next.push(f);
+    }
+    setFiles(next);
+    setError(issues.join(' '));
+  }
+  const onPick = (e) => { const picked = Array.from(e.target.files); e.target.value = ''; addFiles(picked); };
+  const onDrop = (e) => { e.preventDefault(); setOver(false); addFiles(Array.from(e.dataTransfer.files)); };
+  const remove = (idx) => { setFiles((list) => list.filter((_, i) => i !== idx)); setError(''); };
 
   function problem() {
     if (files.length === 0) return 'Please choose at least one file.';
@@ -259,7 +265,7 @@ function UploadFiling() {
                 onDragOver={(e) => { e.preventDefault(); setOver(true); }} onDragLeave={() => setOver(false)} onDrop={onDrop}
               >
                 <i className="fa-solid fa-cloud-arrow-up" />
-                <strong>Drag &amp; drop files here, or click to browse</strong>
+                <strong>{files.length ? "Add more files: drag & drop here, or click to browse" : "Drag & drop files here, or click to browse"}</strong>
                 <small>{ALLOWED_EXT.join(', ').toUpperCase()} · up to {MAX_FILES} files · {MAX_FILE_MB} MB each</small>
                 <input id="files" ref={input} type="file" multiple accept={ALLOWED_EXT.map((e) => `.${e}`).join(',')} onChange={onPick} />
               </label>

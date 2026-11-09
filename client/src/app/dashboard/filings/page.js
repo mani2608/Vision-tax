@@ -44,7 +44,8 @@ export default function MyFilings() {
     { label: 'Year', sort: 'year', render: (r) => r.year },
     { label: 'Contact', sort: 'contact', render: (r) => <span className="nowrap">{fmtPhone(r.contact)}</span> },
     { label: 'Status', render: (r) => <StatusBadge status={r.status} /> },
-    { label: 'Final File', render: (r) => <FileLinks files={r.files} empty="—" /> },
+    { label: 'Client Filing Files', render: (r) => <FileLinks files={(r.files || []).filter((f) => f.kind === 'upload')} empty="—" /> },
+    { label: 'Final File', render: (r) => <FileLinks files={(r.files || []).filter((f) => f.kind === 'final')} empty="—" /> },
     {
       // Same rule as before: Pending / In Progress filings are editable, Completed ones are read-only (view only).
       label: 'Action',

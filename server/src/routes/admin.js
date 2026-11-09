@@ -248,10 +248,9 @@ router.patch('/filings/:id/status', asyncRoute((req, res) =>
       throw httpError(400, `A filing cannot move from "${filing.status}" to "${to}".`);
     }
     const count = async (kind) => (await conn.query('SELECT COUNT(*) AS n FROM filing_files WHERE filing_id = ? AND kind = ?', [filing.id, kind]))[0][0].n;
-    // A filing only moves forward once the admin has uploaded the file for the client (the upload itself never moves it).
+    // The admin upload is mandatory ONLY to leave Pending. Ongoing / Draft / Completed actions never require a new file,
+    // and existing documents are left untouched.
     if (filing.status === 'pending' && to === 'ongoing' && !(await count('draft'))) throw httpError(400, 'Upload a document for the client before starting processing.');
-    if (to === 'drafted' && !(await count('draft'))) throw httpError(400, 'Upload a draft copy before marking the filing as drafted.');
-    if (to === 'completed' && !(await count('final'))) throw httpError(400, 'Upload the final copy before marking the filing as completed.');
     await conn.query('UPDATE filings SET status = ? WHERE id = ?', [to, filing.id]);
     await conn.query('INSERT INTO filing_status_history (filing_id, from_status, to_status, changed_by, note) VALUES (?,?,?,?,?)',
       [filing.id, filing.status, to, req.user.id, note]);

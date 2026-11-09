@@ -44,8 +44,7 @@ function useRowUpload(filingId, kind, onDone) {
 function blocker(row, to) {
   const has = (kind) => (row.files || []).some((f) => f.kind === kind);
   if (row.status === 'pending' && to === 'ongoing' && !has('draft')) return 'Upload a document first.';
-  if (to === 'drafted' && !has('draft')) return 'A draft document is needed first.';
-  if (to === 'completed' && !has('final')) return 'Upload the Upload File first.';
+  // Ongoing / Draft / Completed never require a new upload.
   return '';
 }
 
@@ -150,7 +149,7 @@ function ReferenceModal({ row, onClose, onDone }) {
 
   return (
     <Modal title="Payment reference" onClose={onClose} busy={busy}>
-      <p className="ref-for"><b>{row.userName}</b> · {row.type} · FY {row.year} · #{row.id}</p>
+      <p className="ref-for"><b>{row.name}</b> · {row.type} · FY {row.year} · #{row.id}</p>
       {(row.refs || []).length > 0 && (
         <ul className="ref-list">
           {row.refs.map((r) => (
@@ -198,12 +197,12 @@ function RefCell({ row, onDone }) {
 // ---- Tables ---------------------------------------------------------------------------------------------------
 const only = (files, kind) => (files || []).filter((f) => f.kind === kind);
 const BASE = [
-  { label: 'Client', sort: 'name', render: (r) => <UserCell name={r.userName || r.name}><FilingName id={r.id} name={r.userName || r.name} role="admin" /></UserCell> },
+  { label: 'Client / Name', sort: 'name', render: (r) => <UserCell name={r.name}><FilingName id={r.id} name={r.name} role="admin" /></UserCell> }, // shows the filing's own Filing Name (filings.name), not the account holder's name
   { label: 'Type of Filing', sort: 'type', render: (r) => <span className="chip">{r.type}</span> },
   { label: 'Year', sort: 'year', render: (r) => r.year },
   { label: 'Contact', sort: 'contact', render: (r) => <span className="nowrap">{fmtPhone(r.contact)}</span> },
   // Two different fields: what the CLIENT uploaded (read-only) and what the ADMIN uploaded (replace / delete icons).
-  { label: 'Client Filing File', render: (r) => <FileLinks files={only(r.files, 'upload')} empty="No file" /> },
+  { label: 'Client Filing Files', render: (r) => <FileLinks files={only(r.files, 'upload')} empty="No file" /> },
 ];
 
 // ---- Admin-uploaded documents: pen = replace with a new file, cross = delete (with confirmation) ----------------------
@@ -261,7 +260,7 @@ function AdminFiles({ row, kinds, refresh, empty }) {
       <input ref={input} type="file" hidden accept={ALLOWED_EXT.map((e) => `.${e}`).join(',')} onChange={onPick} />
       {deleting && (
         <Modal title="Delete document" onClose={() => setDeleting(null)} busy={busy}>
-          <p>Delete <b>{deleting.name}</b> from <b>{row.userName || row.name}</b>'s filing? Only this document is removed; the filing's other documents are not affected.</p>
+          <p>Delete <b>{deleting.name}</b> from filing <b>{row.name}</b>? Only this document is removed; the filing's other documents are not affected.</p>
           <div className="modal-actions">
             <button className="btn outline sm" onClick={() => setDeleting(null)} disabled={busy}>Cancel</button>
             <button className="btn danger sm" onClick={confirmDelete} disabled={busy}>{busy ? 'Deleting…' : 'Delete'}</button>
